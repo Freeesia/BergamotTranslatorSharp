@@ -1,0 +1,10 @@
+{
+    "terminal.integrated.defaultProfile.windows": "bergamot",
+    "terminal.integrated.profiles.windows": {
+        "bergamot": {
+            "path": "cmd.exe",
+            "args": ["/k", "${workspaceFolder}\\profile.bat"],
+            "icon": "terminal-cmd"
+        }
+    },
+}
