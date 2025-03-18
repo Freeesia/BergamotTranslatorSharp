@@ -3,6 +3,12 @@ add_library(bergamot_translator_dynamic SHARED
   src/bergamot_translator_dynamic.cpp
 )
 
+# 出力ファイル名を設定
+set_target_properties(bergamot_translator_dynamic
+  PROPERTIES
+    OUTPUT_NAME "bergamot"
+)
+
 # インクルードディレクトリの設定
 target_include_directories(bergamot_translator_dynamic
   PUBLIC

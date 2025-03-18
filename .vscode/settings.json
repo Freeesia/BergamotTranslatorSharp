@@ -7,4 +7,5 @@
             "icon": "terminal-cmd"
         }
     },
+    "dotnet.defaultSolution": "BergamotTranslatorSharp.sln",
 }
