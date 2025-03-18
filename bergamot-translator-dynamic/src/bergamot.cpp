@@ -1,122 +1,116 @@
 #include "bergamot.h"
-#include <chrono>
-#include <iostream>
-#include <thread>
-
-// 本番実装では、実際のBergamotTranslatorのヘッダーをインクルードする
+// #include "translator/response.h"
+// #include "translator/response_options.h"
 // #include "translator/service.h"
+// #include "translator/utils.h"
+// #include "translator/translation_model.h"
+// #include <combaseapi.h>
 
-namespace bergamot {
+// using namespace marian;
+// using namespace marian::bergamot;
 
-// Pimplイディオム実装
-class BergamotTranslatorDynamic::Impl {
-public:
-    Impl() : isInitialized(false), currentFrom("en"), currentTo("ja") {}
-    
-    ~Impl() {
-        // クリーンアップ処理
-    }
-    
-    bool Initialize(const std::string& modelPath) {
-        try {
-            // 実際の実装では、Bergamot TranslatorのAPIを使用してモデルを読み込む
-            std::cout << "Initializing translator with model: " << modelPath << std::endl;
-            
-            // 初期化のシミュレーション（実際の実装では置き換え）
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            
-            isInitialized = true;
-            modelFilePath = modelPath;
-            return true;
-        }
-        catch (const std::exception& e) {
-            std::cerr << "Initialization failed: " << e.what() << std::endl;
-            return false;
-        }
-    }
-    
-    TranslationResult Translate(const std::string& text, const TranslationOptions& options) {
-        if (!isInitialized) {
-            TranslationResult result;
-            result.text = "Error: Translator not initialized";
-            return result;
-        }
-        
-        // 翻訳処理の開始時間を記録
-        auto startTime = std::chrono::high_resolution_clock::now();
-        
-        // 実際の実装では、Bergamot TranslatorのAPIを使用して翻訳を行う
-        // 今はダミーの翻訳を実施
-        TranslationResult result;
-        result.text = "[" + currentFrom + "->" + currentTo + "] " + text;
-        result.quality = 0.85f;  // ダミー値
-        
-        // 処理時間を計算
-        auto endTime = std::chrono::high_resolution_clock::now();
-        result.time = std::chrono::duration<float, std::milli>(endTime - startTime).count();
-        
-        return result;
-    }
-    
-    std::vector<TranslationResult> TranslateBatch(const std::vector<std::string>& texts, 
-                                                 const TranslationOptions& options) {
-        std::vector<TranslationResult> results;
-        results.reserve(texts.size());
-        
-        for (const auto& text : texts) {
-            results.push_back(Translate(text, options));
-        }
-        
-        return results;
-    }
-    
-    std::vector<std::string> GetAvailableLanguagePairs() const {
-        // 実際の実装では、モデルから利用可能な言語ペアを取得
-        return {"en-ja", "ja-en", "en-de", "de-en"};
-    }
-    
-    bool SetLanguagePair(const std::string& from, const std::string& to) {
-        // 実際の実装では、モデルが指定された言語ペアをサポートしているか確認
-        currentFrom = from;
-        currentTo = to;
-        return true;
-    }
+// トランスレーターの状態を保持する構造体
+struct BergamotTranslatorState
+{
+    // BlockingServiceとTranslationModelのインスタンスを保持
+    // std::unique_ptr<BlockingService> service;
+    // std::shared_ptr<TranslationModel> model;
 
-private:
-    bool isInitialized;
-    std::string modelFilePath;
-    std::string currentFrom;
-    std::string currentTo;
-    
-    // 実際の実装では、Bergamot Translatorのサービスインスタンスを保持
-    // std::unique_ptr<marian::bergamot::Service> service;
+    BergamotTranslatorState() {}
+    ~BergamotTranslatorState() {}
 };
 
-// パブリックAPI実装
-BergamotTranslatorDynamic::BergamotTranslatorDynamic() : pImpl(std::make_unique<Impl>()) {}
+extern "C"
+{
+    void *BergamotTranslator_Initialize(
+        const char *modelPath,
+        const char *shortlistPath,
+        const char *vocabPath,
+        const char *configYaml,
+        const BergamotTranslationOptions *options)
+    {
+        // // BlockingServiceの設定
+        // BlockingService::Config serviceConfig;
+        // serviceConfig.cacheSize = options ? options->cacheSize : 0;
 
-BergamotTranslatorDynamic::~BergamotTranslatorDynamic() = default;
+        // // トランスレーターの状態オブジェクト作成
+        // auto state = new BergamotTranslatorState();
 
-bool BergamotTranslatorDynamic::Initialize(const std::string& modelPath) {
-    return pImpl->Initialize(modelPath);
-}
+        // // BlockingServiceのインスタンス作成
+        // state->service = std::make_unique<BlockingService>(serviceConfig);
 
-TranslationResult BergamotTranslatorDynamic::Translate(const std::string& text, 
-                                                     const TranslationOptions& options) {
-    return pImpl->Translate(text, options);
-}
+        // // TranslationModelの設定
+        // TranslationModel::Config modelConfig;
 
-std::vector<TranslationResult> BergamotTranslatorDynamic::TranslateBatch(
-    const std::vector<std::string>& texts, const TranslationOptions& options) {
-    return pImpl->TranslateBatch(texts, options);
-}
+        // // モデルファイルパスの設定
+        // modelConfig.modelPath = modelPath;
+        // modelConfig.shortlistPath = shortlistPath;
+        // modelConfig.vocabPaths = {vocabPath};
 
-std::vector<std::string> BergamotTranslatorDynamic::GetAvailableLanguagePairs() const {
-    return pImpl->GetAvailableLanguagePairs();
-}
+        // // 設定ファイルが提供されていれば読み込む
+        // if (configYaml && strlen(configYaml) > 0)
+        // {
+        //     modelConfig.gemm = "intgemm8"; // デフォルト設定
 
-bool BergamotTranslatorDynamic::SetLanguagePair(const std::string& from, const std::string& to) {
-    return pImpl->SetLanguagePair(from, to);
-}
+        //     // 追加設定を解析
+        //     if (options)
+        //     {
+        //         modelConfig.beamSize = options->beamSize;
+        //         modelConfig.normalize = options->normalizeScore ? 1.0f : 0.0f;
+        //         modelConfig.maxLengthBreak = options->maxLengthBreak;
+        //     }
 
-} // namespace bergamot
+        //     // configYamlがあれば適用
+        //     modelConfig.yamlConfig = configYaml;
+        // }
+
+        // モデルのインスタンス作成
+        // state->model = std::make_shared<TranslationModel>(modelConfig);
+        // return static_cast<void *>(state);
+        return nullptr;
+    }
+
+    char *BergamotTranslator_Translate(void *translator, const char *text)
+    {
+        if (!translator || !text)
+        {
+            return nullptr;
+        }
+
+        // auto state = static_cast<BergamotTranslatorState *>(translator);
+
+        // // 翻訳オプションの設定
+        // ResponseOptions responseOptions;
+
+        // // 翻訳実行
+        // std::vector<std::string> sources = {text};
+        // std::vector<ResponseOptions> options = {responseOptions};
+
+        // std::vector<Response> responses = state->service->translateMultiple(
+        //     state->model,
+        //     std::move(sources),
+        //     options);
+
+        // // 翻訳結果を取得
+        // if (!responses.empty())
+        // {
+        //     auto translated = responses[0].target.text;
+        //     size_t len = translated.size() + 1;
+        //     char *result = (char *)CoTaskMemAlloc(len);
+        //     memcpy(result, translated.c_str(), len);
+        //     return result;
+        // }
+
+        return nullptr;
+    }
+
+    void BergamotTranslator_Free(void *translator)
+    {
+        if (translator)
+        {
+            auto state = static_cast<BergamotTranslatorState *>(translator);
+            delete state;
+        }
+    }
+
+} // extern "C"
