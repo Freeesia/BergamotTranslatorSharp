@@ -1,7 +1,5 @@
 # 動的ライブラリのターゲットを追加
-add_library(bergamot_translator_dynamic SHARED
-  src/bergamot_translator_dynamic.cpp
-)
+add_library(bergamot_translator_dynamic SHARED src/bergamot.cpp)
 
 # 出力ファイル名を設定
 set_target_properties(bergamot_translator_dynamic
@@ -41,6 +39,6 @@ install(TARGETS bergamot_translator_dynamic
   ARCHIVE DESTINATION lib
 )
 
-install(FILES include/bergamot_translator_dynamic.h
+install(FILES include/bergamot.h
   DESTINATION include
 )

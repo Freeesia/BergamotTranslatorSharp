@@ -1,4 +1,4 @@
-#include "bergamot_translator_dynamic.h"
+#include "bergamot.h"
 #include <chrono>
 #include <iostream>
 #include <thread>
