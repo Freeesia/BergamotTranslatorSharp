@@ -7,6 +7,7 @@
 #include <combaseapi.h>
 
 using marian::bergamot::BlockingService;
+using marian::bergamot::parseOptionsFromFilePath;
 using marian::bergamot::Response;
 using marian::bergamot::ResponseOptions;
 using marian::bergamot::TranslationModel;
@@ -24,16 +25,10 @@ struct BergamotTranslatorState
 
 extern "C"
 {
-    void *BergamotTranslator_Initialize(
-        const char *modelPath,
-        const char *shortlistPath,
-        const char *vocabPath,
-        const char *configYaml,
-        const BergamotTranslationOptions *options)
+    void *initialize(const char *configPath)
     {
         // BlockingServiceの設定
         BlockingService::Config serviceConfig;
-        serviceConfig.cacheSize = options ? options->cacheSize : 0;
 
         // トランスレーターの状態オブジェクト作成
         auto state = new BergamotTranslatorState();
@@ -41,37 +36,13 @@ extern "C"
         // BlockingServiceのインスタンス作成
         state->service = std::make_unique<BlockingService>(serviceConfig);
 
-        // TranslationModelの設定
-        TranslationModel::Config modelConfig;
-
-        // // モデルファイルパスの設定
-        // modelConfig.modelPath = modelPath;
-        // modelConfig.shortlistPath = shortlistPath;
-        // modelConfig.vocabPaths = {vocabPath};
-
-        // // 設定ファイルが提供されていれば読み込む
-        // if (configYaml && strlen(configYaml) > 0)
-        // {
-        //     modelConfig.gemm = "intgemm8"; // デフォルト設定
-
-        //     // 追加設定を解析
-        //     if (options)
-        //     {
-        //         modelConfig.beamSize = options->beamSize;
-        //         modelConfig.normalize = options->normalizeScore ? 1.0f : 0.0f;
-        //         modelConfig.maxLengthBreak = options->maxLengthBreak;
-        //     }
-
-        //     // configYamlがあれば適用
-        //     modelConfig.yamlConfig = configYaml;
-        // }
-
+        auto options = parseOptionsFromFilePath(configPath);
         // モデルのインスタンス作成
-        state->model = std::make_shared<TranslationModel>(modelConfig);
+        state->model = std::make_shared<TranslationModel>(options);
         return static_cast<void *>(state);
     }
 
-    char *BergamotTranslator_Translate(void *translator, const char *text)
+    char *translate(void *translator, const char *text)
     {
         if (!translator || !text)
         {
@@ -105,7 +76,7 @@ extern "C"
         return nullptr;
     }
 
-    void BergamotTranslator_Free(void *translator)
+    void free(void *translator)
     {
         if (translator)
         {

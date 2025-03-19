@@ -11,7 +11,8 @@
     "files.associations": {
         ".sentryclirc": "ini",
         "optional": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "xstring": "cpp"
     },
     "cmake.cmakePath": "${workspaceFolder}/cmake.bat",
     "cmake.configureArgs": [
