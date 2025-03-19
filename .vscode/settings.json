@@ -8,4 +8,12 @@
         }
     },
     "dotnet.defaultSolution": "BergamotTranslatorSharp.sln",
+    "files.associations": {
+        ".sentryclirc": "ini",
+        "optional": "cpp"
+    },
+    "cmake.cmakePath": "${workspaceFolder}/cmake.bat",
+    "cmake.configureArgs": [
+        "-DCMAKE_TOOLCHAIN_FILE=\"%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake\""
+    ],
 }
