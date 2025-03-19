@@ -1,20 +1,22 @@
 #include "bergamot.h"
-// #include "translator/response.h"
-// #include "translator/response_options.h"
-// #include "translator/service.h"
-// #include "translator/utils.h"
-// #include "translator/translation_model.h"
-// #include <combaseapi.h>
+#include "translator/response.h"
+#include "translator/response_options.h"
+#include "translator/service.h"
+#include "translator/utils.h"
+#include "translator/translation_model.h"
+#include <combaseapi.h>
 
-// using namespace marian;
-// using namespace marian::bergamot;
+using marian::bergamot::BlockingService;
+using marian::bergamot::Response;
+using marian::bergamot::ResponseOptions;
+using marian::bergamot::TranslationModel;
 
 // トランスレーターの状態を保持する構造体
 struct BergamotTranslatorState
 {
     // BlockingServiceとTranslationModelのインスタンスを保持
-    // std::unique_ptr<BlockingService> service;
-    // std::shared_ptr<TranslationModel> model;
+    std::unique_ptr<BlockingService> service;
+    std::shared_ptr<TranslationModel> model;
 
     BergamotTranslatorState() {}
     ~BergamotTranslatorState() {}
@@ -29,18 +31,18 @@ extern "C"
         const char *configYaml,
         const BergamotTranslationOptions *options)
     {
-        // // BlockingServiceの設定
-        // BlockingService::Config serviceConfig;
-        // serviceConfig.cacheSize = options ? options->cacheSize : 0;
+        // BlockingServiceの設定
+        BlockingService::Config serviceConfig;
+        serviceConfig.cacheSize = options ? options->cacheSize : 0;
 
-        // // トランスレーターの状態オブジェクト作成
-        // auto state = new BergamotTranslatorState();
+        // トランスレーターの状態オブジェクト作成
+        auto state = new BergamotTranslatorState();
 
-        // // BlockingServiceのインスタンス作成
-        // state->service = std::make_unique<BlockingService>(serviceConfig);
+        // BlockingServiceのインスタンス作成
+        state->service = std::make_unique<BlockingService>(serviceConfig);
 
-        // // TranslationModelの設定
-        // TranslationModel::Config modelConfig;
+        // TranslationModelの設定
+        TranslationModel::Config modelConfig;
 
         // // モデルファイルパスの設定
         // modelConfig.modelPath = modelPath;
@@ -65,9 +67,8 @@ extern "C"
         // }
 
         // モデルのインスタンス作成
-        // state->model = std::make_shared<TranslationModel>(modelConfig);
-        // return static_cast<void *>(state);
-        return nullptr;
+        state->model = std::make_shared<TranslationModel>(modelConfig);
+        return static_cast<void *>(state);
     }
 
     char *BergamotTranslator_Translate(void *translator, const char *text)
@@ -77,29 +78,29 @@ extern "C"
             return nullptr;
         }
 
-        // auto state = static_cast<BergamotTranslatorState *>(translator);
+        auto state = static_cast<BergamotTranslatorState *>(translator);
 
-        // // 翻訳オプションの設定
-        // ResponseOptions responseOptions;
+        // 翻訳オプションの設定
+        ResponseOptions responseOptions;
 
-        // // 翻訳実行
-        // std::vector<std::string> sources = {text};
-        // std::vector<ResponseOptions> options = {responseOptions};
+        // 翻訳実行
+        std::vector<std::string> sources = {text};
+        std::vector<ResponseOptions> options = {responseOptions};
 
-        // std::vector<Response> responses = state->service->translateMultiple(
-        //     state->model,
-        //     std::move(sources),
-        //     options);
+        std::vector<Response> responses = state->service->translateMultiple(
+            state->model,
+            std::move(sources),
+            options);
 
-        // // 翻訳結果を取得
-        // if (!responses.empty())
-        // {
-        //     auto translated = responses[0].target.text;
-        //     size_t len = translated.size() + 1;
-        //     char *result = (char *)CoTaskMemAlloc(len);
-        //     memcpy(result, translated.c_str(), len);
-        //     return result;
-        // }
+        // 翻訳結果を取得
+        if (!responses.empty())
+        {
+            auto translated = responses[0].target.text;
+            size_t len = translated.size() + 1;
+            char *result = (char *)CoTaskMemAlloc(len);
+            memcpy(result, translated.c_str(), len);
+            return result;
+        }
 
         return nullptr;
     }

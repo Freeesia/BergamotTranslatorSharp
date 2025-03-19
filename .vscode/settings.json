@@ -10,7 +10,8 @@
     "dotnet.defaultSolution": "BergamotTranslatorSharp.sln",
     "files.associations": {
         ".sentryclirc": "ini",
-        "optional": "cpp"
+        "optional": "cpp",
+        "memory": "cpp"
     },
     "cmake.cmakePath": "${workspaceFolder}/cmake.bat",
     "cmake.configureArgs": [
