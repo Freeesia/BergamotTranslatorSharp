@@ -123,6 +123,9 @@ jobs:
             -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} `
             -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} `
             -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: pack/*
       - if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
         run: |
           dotnet nuget push pack\*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
