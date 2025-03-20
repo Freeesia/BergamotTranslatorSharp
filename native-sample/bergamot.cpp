@@ -5,16 +5,9 @@
 #include <sstream>
 #include <combaseapi.h>
 
-// 標準入力からテキストを読み込む関数
-std::string readFromStdin() {
-  std::stringstream buffer;
-  buffer << std::cin.rdbuf();
-  return buffer.str();
-}
-
 int main(int argc, char *argv[]) {
-  if (argc < 2) {
-    std::cout << "Usage: " << argv[0] << " <config_path>" << std::endl;
+  if (argc < 3) {
+    std::cout << "Usage: " << argv[0] << " <config_path> <text_to_translate>" << std::endl;
     return 1;
   }
 
@@ -25,11 +18,11 @@ int main(int argc, char *argv[]) {
   void* translator = translator_initialize(configPath);
   if (!translator) {
     std::cout << "Failed to initialize translator";
-    return 1;
+    return 2;
   }
 
-  // 標準入力からテキストを読み込む
-  std::string input = readFromStdin();
+  // 翻訳するテキストを取得
+  std::string input = argv[2];
 
   // 翻訳を実行
   char* translatedText = translator_translate(translator, input.c_str());
@@ -42,6 +35,7 @@ int main(int argc, char *argv[]) {
     CoTaskMemFree(translatedText);  // WindowsのCoTaskMemAllocを使用していると仮定
   } else {
     std::cout << "Translation failed";
+    return 3;
   }
 
   // 翻訳エンジンの解放
