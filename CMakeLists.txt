@@ -8,6 +8,13 @@ if (POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
 
+# vcpkgのtoolchainファイルを設定（指定されていない場合）
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+  if(DEFINED ENV{VCPKG_ROOT})
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+  endif()
+endif()
+
 project(bergamot CXX C)
 
 set(CMAKE_CXX_STANDARD 17)

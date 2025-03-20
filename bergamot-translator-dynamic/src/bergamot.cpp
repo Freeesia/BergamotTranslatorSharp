@@ -1,8 +1,7 @@
-#include "bergamot.h"
+﻿#include "bergamot.h"
 #include "translator/response.h"
 #include "translator/response_options.h"
 #include "translator/service.h"
-#include "translator/utils.h"
 #include "translator/translation_model.h"
 #include <combaseapi.h>
 

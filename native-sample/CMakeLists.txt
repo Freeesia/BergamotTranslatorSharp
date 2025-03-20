@@ -7,7 +7,7 @@ target_include_directories(native-sample PRIVATE
 
 # 動的ライブラリのディレクトリを追加
 target_link_directories(native-sample PRIVATE
-  ${CMAKE_BINARY_DIR}/bergamot-translator-dynamic/Release
+  ${CMAKE_BINARY_DIR}/bergamot-translator-dynamic/$<CONFIG>
 )
 
 # ターゲット名ではなく、実際のライブラリファイル名を指定
@@ -19,11 +19,11 @@ if(WIN32)
   add_custom_command(TARGET native-sample POST_BUILD
     # bergamot.dllをコピー
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      ${CMAKE_BINARY_DIR}/bergamot-translator-dynamic/Release/bergamot.dll
+      ${CMAKE_BINARY_DIR}/bergamot-translator-dynamic/$<CONFIG>/bergamot.dll
       $<TARGET_FILE_DIR:native-sample>
     # pcre2-8.dllをコピー
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      ${CMAKE_BINARY_DIR}/bergamot-translator-dynamic/Release/pcre2-8.dll
+      ${CMAKE_BINARY_DIR}/bergamot-translator-dynamic/$<CONFIG>/pcre2-8.dll
       $<TARGET_FILE_DIR:native-sample>
   )
 endif()
