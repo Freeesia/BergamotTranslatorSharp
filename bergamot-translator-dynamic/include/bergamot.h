@@ -22,7 +22,7 @@ extern "C"
    * @param configPath 設定ファイルのパス
    * @return 初期化されたトランスレーターのポインタ、失敗した場合はNULL
    */
-  BERGAMOT_API void *initialize(const char *configPath);
+  BERGAMOT_API void *translator_initialize(const char *configPath);
 
   /**
    * @brief テキストを翻訳
@@ -30,13 +30,13 @@ extern "C"
    * @param text 翻訳するテキスト
    * @return 翻訳結果（テキストは呼び出し側が解放する必要がある）
    */
-  BERGAMOT_API char *translate(void *translator, const char *text);
+  BERGAMOT_API char *translator_translate(void *translator, const char *text);
 
   /**
    * @brief トランスレーターを解放
    * @param translator 解放するトランスレーターのポインタ
    */
-  BERGAMOT_API void free(void *translator);
+  BERGAMOT_API void translator_free(void *translator);
 
 #ifdef __cplusplus
 }

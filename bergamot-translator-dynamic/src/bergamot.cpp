@@ -24,7 +24,7 @@ struct BergamotTranslatorState
 
 extern "C"
 {
-    void *initialize(const char *configPath)
+    void *translator_initialize(const char *configPath)
     {
         // BlockingServiceの設定
         BlockingService::Config serviceConfig;
@@ -41,7 +41,7 @@ extern "C"
         return static_cast<void *>(state);
     }
 
-    char *translate(void *translator, const char *text)
+    char *translator_translate(void *translator, const char *text)
     {
         if (!translator || !text)
         {
@@ -75,7 +75,7 @@ extern "C"
         return nullptr;
     }
 
-    void free(void *translator)
+    void translator_free(void *translator)
     {
         if (translator)
         {

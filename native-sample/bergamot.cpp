@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
   const char* configPath = argv[1];
 
   // 翻訳エンジンの初期化
-  void* translator = initialize(configPath);
+  void* translator = translator_initialize(configPath);
   if (!translator) {
     std::cout << "Failed to initialize translator";
     return 1;
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
   std::string input = readFromStdin();
 
   // 翻訳を実行
-  char* translatedText = translate(translator, input.c_str());
+  char* translatedText = translator_translate(translator, input.c_str());
   if (translatedText) {
     // 翻訳結果を出力
     std::cout << translatedText;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
   }
 
   // 翻訳エンジンの解放
-  free(translator);
+  translator_free(translator);
 
   return 0;
 }
