@@ -1,41 +1,51 @@
-#include "translator/byte_array_util.h"
-#include "translator/parser.h"
-#include "translator/response.h"
-#include "translator/response_options.h"
-#include "translator/service.h"
-#include "translator/utils.h"
+#include "bergamot.h"
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <combaseapi.h>
+
+// 標準入力からテキストを読み込む関数
+std::string readFromStdin() {
+  std::stringstream buffer;
+  buffer << std::cin.rdbuf();
+  return buffer.str();
+}
 
 int main(int argc, char *argv[]) {
-  using namespace marian::bergamot;
-  ConfigParser<AsyncService> configParser("Bergamot CLI", /*multiOpMode=*/false);
-  configParser.parseArgs(argc, argv);
-  auto &config = configParser.getConfig();
+  if (argc < 2) {
+    std::cout << "Usage: " << argv[0] << " <config_path>" << std::endl;
+    return 1;
+  }
 
-  AsyncService service(config.serviceConfig);
+  // モデル設定ファイルのパス
+  const char* configPath = argv[1];
 
-  // Construct a model.
-  auto options = parseOptionsFromFilePath(config.modelConfigPaths.front());
+  // 翻訳エンジンの初期化
+  void* translator = initialize(configPath);
+  if (!translator) {
+    std::cout << "Failed to initialize translator";
+    return 1;
+  }
 
-  std::shared_ptr<TranslationModel> model = service.createCompatibleModel(options);
-
-  ResponseOptions responseOptions;
+  // 標準入力からテキストを読み込む
   std::string input = readFromStdin();
 
-  // Create a barrier using future/promise.
-  std::promise<Response> promise;
-  std::future<Response> future = promise.get_future();
-  auto callback = [&promise](Response &&response) {
-    // Fulfill promise.
-    promise.set_value(std::move(response));
-  };
+  // 翻訳を実行
+  char* translatedText = translate(translator, input.c_str());
+  if (translatedText) {
+    // 翻訳結果を出力
+    std::cout << translatedText;
+    
+    // translatedTextのメモリを解放
+    // 注: ここでfree()を使わず、実装に合わせた解放方法を使用する必要があるかもしれません
+    CoTaskMemFree(translatedText);  // WindowsのCoTaskMemAllocを使用していると仮定
+  } else {
+    std::cout << "Translation failed";
+  }
 
-  service.translate(model, std::move(input), callback, responseOptions);
-
-  // Wait until promise sets the response.
-  Response response = future.get();
-
-  // Print (only) translated text.
-  std::cout << response.target.text;
+  // 翻訳エンジンの解放
+  free(translator);
 
   return 0;
 }
