@@ -2,11 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;netstandard2.1</TargetFrameworks>
+    <PackageId>BergamotTranslatorSharp</PackageId>
   </PropertyGroup>
   
   <ItemGroup>
     <None Include="..\libs\bin\bergamot.dll">
-      <Link>bergamot.dll</Link>
+      <Pack>true</Pack>
+      <PackagePath>runtimes\win-x64\native</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
