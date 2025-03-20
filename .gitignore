@@ -485,5 +485,6 @@ $RECYCLE.BIN/
 
 build/
 models/
+libs/
 
 test.txt

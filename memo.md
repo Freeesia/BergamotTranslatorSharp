@@ -34,7 +34,8 @@ nmake
 👆だと結局PCRE2が無理なので、vckg通す
 ```bat
 cmake -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release ..
-cmake --build . --config Release -j12
+cmake --build . --config Release --target bergamot_translator_dynamic
+cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
 ```
 
 これでも`-- Not Found TCMalloc: TCMALLOC_LIB-NOTFOUND`がでる

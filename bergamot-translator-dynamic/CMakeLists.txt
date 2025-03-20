@@ -34,11 +34,12 @@ target_compile_definitions(bergamot_translator_dynamic
 
 # インストール設定
 install(TARGETS bergamot_translator_dynamic
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib COMPONENT bergamot_translator_dynamic
+  RUNTIME DESTINATION bin COMPONENT bergamot_translator_dynamic
+  ARCHIVE DESTINATION lib COMPONENT bergamot_translator_dynamic
 )
 
 install(FILES include/bergamot.h
   DESTINATION include
+  COMPONENT bergamot_translator_dynamic
 )
