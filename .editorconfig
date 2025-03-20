@@ -1,0 +1,7 @@
+[*]
+indent_style = space
+charset = utf-8
+
+[CMakeLists.txt]
+indent_size = 2
+

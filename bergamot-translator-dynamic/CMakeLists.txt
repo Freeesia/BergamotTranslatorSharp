@@ -15,7 +15,7 @@ target_include_directories(bergamot_translator_dynamic
 
 # 必要な依存ライブラリのリンク
 target_link_libraries(bergamot_translator_dynamic
-  PRIVATE
+  PUBLIC
     bergamot-translator
 )
 
