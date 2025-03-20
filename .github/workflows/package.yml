@@ -26,7 +26,7 @@ jobs:
           - name: "Windows CPU-only"
             identifier: "windows-x64"
 
-    runs-on: windows
+    runs-on: windows-latest
     name: ${{ matrix.name }}
 
     steps:
