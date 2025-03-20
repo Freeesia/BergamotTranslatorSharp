@@ -3,6 +3,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <Version Condition="'$(Version)' == ''">0.0.0-local</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+    <ReadmeFile>README.md</ReadmeFile>
+    <Authors>Freeesia</Authors>
+    <Description>BergamotTranslatorSharp is a tool to translate the text on the screen.</Description>
+    <PackageProjectUrl>https://github.com/Freeesia/BergamotTranslatorSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Freeesia/BergamotTranslatorSharp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>translation api i18n language translator</PackageTags>
   </PropertyGroup>
 </Project>

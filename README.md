@@ -12,7 +12,6 @@ BergamotTranslatorSharp は Bergamot Translator の C# ラッパーです。オ�
 - 多言語対応
 - 高速な処理
 - .NET アプリケーションとの簡単な統合
-- クロスプラットフォーム対応
 
 ## インストール方法
 
@@ -31,38 +30,22 @@ dotnet add package BergamotTranslatorSharp
 ### 必要条件
 
 - .NET 6.0 以上
-- Windows、Linux、または macOS
+- .NET Standard 2.1 以上
+- Windows x64
 
 ## 使用方法
 
 ```csharp
 using BergamotTranslatorSharp;
 
-// Bergamot Translator の初期化
-var config = new BergamotConfig
-{
-    ModelPath = "path/to/models"
-};
-
-using var translator = new BergamotTranslator(config);
+// BergamotTranslator のインスタンスを生成
+using var translator = new BergamotTranslator(configPath);
 
 // 翻訳の実行
 string sourceText = "Hello, world!";
-string translatedText = translator.Translate(sourceText, "en", "ja");
+string translatedText = translator.Translate(sourceText);
 
 Console.WriteLine(translatedText); // こんにちは、世界！
-```
-
-## 高度な使用例
-
-```csharp
-// 複数の翻訳をバッチ処理
-var texts = new[] { "Hello", "Good morning", "Thank you" };
-var results = translator.TranslateBatch(texts, "en", "ja");
-
-// 言語検出
-var detectedLanguage = translator.DetectLanguage("Bonjour le monde");
-Console.WriteLine(detectedLanguage); // fr
 ```
 
 ## ライセンス
