@@ -15,7 +15,7 @@ public sealed class BlockingService : IDisposable
     private static extern void translator_free(IntPtr translator);
 
     [DllImport("bergamot", CallingConvention = CallingConvention.Cdecl)]
-    private static extern string translator_translate(IntPtr translator, string text);
+    private static extern IntPtr translator_translate(IntPtr translator, string text);
 
     public BlockingService(string configPath)
     {
@@ -30,7 +30,8 @@ public sealed class BlockingService : IDisposable
     {
         if (disposedValue)
             throw new ObjectDisposedException(nameof(BlockingService));
-        return translator_translate(translator, text);
+        var p = translator_translate(translator, text);
+        return Marshal.PtrToStringUTF8(p) ?? throw new InvalidOperationException("Failed to translate");
     }
 
     private void Dispose(bool disposing)
