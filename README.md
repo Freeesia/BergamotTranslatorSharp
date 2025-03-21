@@ -7,6 +7,8 @@
 
 BergamotTranslatorSharp is a C# wrapper for Bergamot Translator. It allows easy integration of an offline machine translation engine into .NET applications.
 
+| [EN](README.md) | [JA](README.ja.md) |
+
 ## Overview
 
 [Bergamot Translator](https://github.com/browsermt/bergamot-translator) is an offline translation engine. The official website is [https://browser.mt/](https://browser.mt/). This library wraps its functionality for use from C#.

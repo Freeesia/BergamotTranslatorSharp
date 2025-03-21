@@ -5,8 +5,9 @@
 [![NuGet Version](https://img.shields.io/nuget/v/BergamotTranslatorSharp)](https://www.nuget.org/packages/BergamotTranslatorSharp)
 ![NuGet Downloads](https://img.shields.io/nuget/dt/BergamotTranslatorSharp)
 
-
 BergamotTranslatorSharp は Bergamot Translator の C# ラッパーです。オフラインで動作する機械翻訳エンジンを .NET アプリケーションから簡単に利用できるようにします。
+
+| [EN](README.md) | [JA](README.ja.md) |
 
 ## 概要
 
