@@ -1,43 +1,43 @@
 # BergamotTranslatorSharp
 
-BergamotTranslatorSharp は Bergamot Translator の C# ラッパーです。オフラインで動作する機械翻訳エンジンを .NET アプリケーションから簡単に利用できるようにします。
+BergamotTranslatorSharp is a C# wrapper for Bergamot Translator. It allows easy integration of an offline machine translation engine into .NET applications.
 
-## 概要
+## Overview
 
-[Bergamot Translator](https://github.com/browsermt/bergamot-translator) は、オフラインで動作する翻訳エンジンです。公式ウェブサイトは [https://browser.mt/](https://browser.mt/) です。このライブラリはその機能を C# から利用できるようにラップしたものです。
+[Bergamot Translator](https://github.com/browsermt/bergamot-translator) is an offline translation engine. The official website is [https://browser.mt/](https://browser.mt/). This library wraps its functionality for use from C#.
 
-## 特徴
+## Features
 
-- オフラインでの翻訳が可能
-- 多言語対応
-- 高速な処理
-- .NET アプリケーションとの簡単な統合
+- Offline translation capability
+- Multi-language support
+- Fast processing
+- Easy integration with .NET applications
 
-## インストール方法
+## Installation
 
-### NuGet からのインストール
+### Installation from NuGet
 
 ```
 Install-Package BergamotTranslatorSharp
 ```
 
-または
+Or
 
 ```
 dotnet add package BergamotTranslatorSharp
 ```
 
-### 必要条件
+### Requirements
 
-- .NET 6.0 以上
-- .NET Standard 2.1 以上
+- .NET 6.0 or later
+- .NET Standard 2.1 or later
 - Windows x64
 
-## 使用方法
+## Usage
 
-### モデルのダウンロードとコンフィグファイルの作成
+### Downloading Models and Creating Configuration Files
 
-1. [Firefox Translations models](https://github.com/mozilla/firefox-translations-models) の公式ウェブサイトからモデルをダウンロードし、解凍します。
+1. Download and extract models from the [Firefox Translations models](https://github.com/mozilla/firefox-translations-models) official website.
     ```bash
     cd test_page
     git clone --depth 1 --branch main --single-branch https://github.com/mozilla/firefox-translations-models/
@@ -47,16 +47,16 @@ dotnet add package BergamotTranslatorSharp
     cp -rf firefox-translations-models/models/dev/* models
     gunzip models/*/*
     ```
-2. バイナリファイルと同じ位置にコンフィグファイルを作成します。
+2. Create a configuration file in the same location as the binary file.
     ```yml
     relative-paths: true
     models:
-    - model.enja.intgemm.alphas.bin // モデルのパス
+    - model.enja.intgemm.alphas.bin // model path
     vocabs:
-    - vocab.enja.spm // ソースボキャブラリのパス
-    - vocab.enja.spm // ターゲットボキャブラリのパス
+    - vocab.enja.spm // source vocabulary path
+    - vocab.enja.spm // target vocabulary path
     shortlist:
-    - lex.50.50.enja.s2t.bin // ショートリストのパス
+    - lex.50.50.enja.s2t.bin // shortlist path
     - false
     beam-size: 1
     normalize: 1.0
@@ -69,32 +69,32 @@ dotnet add package BergamotTranslatorSharp
     cpu-threads: 0
     quiet: true
     quiet-translation: true
-    gemm-precision: int8shiftAlphaAll // モデル名に`alphas`が含まれる場合は`int8shiftAlphaAll`、それ以外は`int8shiftAll`を指定
+    gemm-precision: int8shiftAlphaAll // specify 'int8shiftAlphaAll' if the model name contains 'alphas', otherwise specify 'int8shiftAll'
     ```
 
-### 翻訳サービスの初期化と翻訳
+### Initializing the Translation Service and Translating
 
 ```cs
 using BergamotTranslatorSharp;
 
-// BergamotTranslator のインスタンスを生成
+// Create an instance of BergamotTranslator
 using var translator = new BergamotTranslator(configPath);
 
-// 翻訳の実行
+// Execute translation
 string sourceText = "Hello, world!";
 string translatedText = translator.Translate(sourceText);
 
 Console.WriteLine(translatedText); // こんにちは、世界！
 ```
 
-## ライセンス
+## License
 
-このプロジェクトは [MPL-2.0](https://www.mozilla.org/en-US/MPL/2.0/) ライセンスの下で公開されています。
+This project is released under the [MPL-2.0](https://www.mozilla.org/en-US/MPL/2.0/) license.
 
-## 貢献
+## Contribution
 
-バグ報告や機能リクエストは GitHub の Issue トラッカーにお願いします。プルリクエストも歓迎します。
+Please report bugs and feature requests to the GitHub Issue Tracker. Pull requests are also welcome.
 
-## 謝辞
+## Acknowledgments
 
-このプロジェクトは [browsermt/bergamot-translator](https://github.com/browsermt/bergamot-translator) を基にしています。
+This project is based on [browsermt/bergamot-translator](https://github.com/browsermt/bergamot-translator).
