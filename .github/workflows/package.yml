@@ -192,7 +192,11 @@ jobs:
       - id: gitversion
         uses: gittools/actions/gitversion/execute@v3.1.11
       - uses: actions/download-artifact@v4
+        with:
+          path: libs
+          merge-multiple: true
       - run: |
+          ls -R libs
           dotnet pack BergamotTranslatorSharp -c Release -o pack \
             -p:Version=${{ steps.gitversion.outputs.fullSemVer }} \
             -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} \
