@@ -7,35 +7,24 @@ on:
   pull_request:
     branches: ["**"]
 
-env:
-  MKL_URL: "https://data.statmt.org/romang/marian-regression-tests/ci/mkl-2020.1-windows-static.zip"
-  CCACHE_BASEDIR: "${{ github.workspace }}"
-  CCACHE_DIR: "${{ github.workspace }}\\ccache"
-  CCACHE_COMPILERCHECK: content
-  CCACHE_COMPRESS: "true"
-  CCACHE_COMPRESSLEVEL: 9
-  CCACHE_MAXSIZE: 200M
-  ccache_version: "4.5"
-
 jobs:
-  package:
-    strategy:
-      matrix:
-        include:
-          # Windows CPU-only build
-          - name: "Windows CPU-only"
-            identifier: "windows-x64"
-
+  win:
     runs-on: windows-latest
-    name: ${{ matrix.name }}
-    permissions:
-      contents: write
+    name: Build Windows Native Lib
+    env:
+      MKL_URL: "https://data.statmt.org/romang/marian-regression-tests/ci/mkl-2020.1-windows-static.zip"
+      CCACHE_BASEDIR: "${{ github.workspace }}"
+      CCACHE_DIR: "${{ github.workspace }}\\ccache"
+      CCACHE_COMPILERCHECK: content
+      CCACHE_COMPRESS: "true"
+      CCACHE_COMPRESSLEVEL: 9
+      CCACHE_MAXSIZE: 200M
+      ccache_version: "4.5"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          fetch-depth: 0
 
       - name: Download ccache
         shell: cmake -P {0}
@@ -59,11 +48,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ matrix.identifier }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
+          key: ccache-windows-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
           restore-keys: |-
-            ccache-${{ matrix.identifier }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
-            ccache-${{ matrix.identifier }}-${{ steps.ccache_vars.outputs.hash }}
-            ccache-${{ matrix.identifier }}
+            ccache-windows-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
+            ccache-windows-x64-${{ steps.ccache_vars.outputs.hash }}
+            ccache-windows-x64
 
       - name: ccache prolog
         run: |-
@@ -95,21 +84,105 @@ jobs:
 
       - name: Build
         working-directory: ${{github.workspace}}/build
-        run: |
-          cmake --build . --config Release -j3 --target bergamot_translator_dynamic
-          cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
+        run: cmake --build . --config Release -j3 --target bergamot_translator_dynamic
+        shell: powershell
+
+      - name: Install
+        working-directory: ${{github.workspace}}/build
+        run: cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
         shell: powershell
 
       - name: ccache epilog
         run: |-
           ${{github.workspace}}\\ccache.exe -sv # Print current cache stats
-
-      - uses: actions/cache@v4
+      - uses: actions/upload-artifact@v4
         with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }} #hash of project files
-          restore-keys: |
-            ${{ runner.os }}-nuget-
+          name: libs-win
+          path: libs/*
+
+  linux:
+    runs-on: ubuntu-latest
+    name: Build Linux Native Lib
+    env:
+      ccache_basedir: ${{ github.workspace }}
+      ccache_dir: "${{ github.workspace }}/.ccache"
+      ccache_compilercheck: content
+      ccache_compress: 'true'
+      ccache_compresslevel: 9
+      ccache_maxsize: 200M
+      ccache_cmake: -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Dependencies
+        run: |-
+          sudo apt-get update
+          sudo apt-get install -y libprotobuf-dev protobuf-compiler libboost-all-dev ccache libunwind-dev libgoogle-perftools-dev
+      - name: Install MKL
+        run: |-
+          wget -qO- "https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB" | sudo apt-key add -
+          sudo sh -c "echo deb https://apt.repos.intel.com/mkl all main > /etc/apt/sources.list.d/intel-mkl.list"
+          sudo apt-get update -o Dir::Etc::sourcelist="/etc/apt/sources.list.d/intel-mkl.list"
+          sudo apt-get install -y --no-install-recommends intel-mkl-64bit-2020.0-088
+      - name: Generate ccache_vars for ccache based on machine
+        shell: bash
+        id: ccache_vars
+        run: |-
+          echo "::set-output name=hash::$(echo ${{ env.ccache_compilercheck }})"
+          echo "::set-output name=timestamp::$(date '+%Y-%m-%dT%H.%M.%S')"
+      - name: Cache-op for build-cache through ccache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.ccache_dir }}
+          key: ccache-linux-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
+          restore-keys: |-
+            ccache-linux-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
+            ccache-linux-x64-${{ steps.ccache_vars.outputs.hash }}
+            ccache-linux-x64
+      - name: ccache environment setup
+        run: |-
+          echo "CCACHE_COMPILER_CHECK=${{ env.ccache_compilercheck }}" >> $GITHUB_ENV
+          echo "CCACHE_BASEDIR=${{ env.ccache_basedir }}" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESS=${{ env.ccache_compress }}" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESSLEVEL=${{ env.ccache_compresslevel }}" >> $GITHUB_ENV
+          echo "CCACHE_DIR=${{ env.ccache_dir }}" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=${{ env.ccache_maxsize }}" >> $GITHUB_ENV
+      - name: ccache prolog
+        run: |-
+          ccache -s # Print current cache stats
+          ccache -z # Zero cache entry
+      - name: cmake
+        run: |-
+          mkdir -p build
+          cd build
+          cmake -L .. ${{ env.ccache_cmake }} -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=ON
+      - name: Build from source
+        working-directory: build
+        run: cmake --build . --config Release -j3 --target bergamot_translator_dynamic
+      - name: Install
+        working-directory: build
+        run: cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
+      - name: ccache epilog
+        run: 'ccache -s # Print current cache stats'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libs-linux
+          path: libs/*
+  dotnet:
+    runs-on: ubuntu-latest
+    name: Build .NET Lib
+    needs:
+      - win
+      - linux
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
@@ -118,6 +191,7 @@ jobs:
           versionSpec: "5.x"
       - id: gitversion
         uses: gittools/actions/gitversion/execute@v3.1.11
+      - uses: actions/download-artifact@v4
       - run: |
           dotnet pack BergamotTranslatorSharp -c Release -o pack `
             -p:Version=${{ steps.gitversion.outputs.fullSemVer }} `
@@ -126,6 +200,7 @@ jobs:
             -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
       - uses: actions/upload-artifact@v4
         with:
+          name: nupkg
           path: pack/*
       - if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
         run: |
