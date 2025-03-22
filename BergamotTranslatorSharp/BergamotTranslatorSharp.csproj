@@ -6,9 +6,14 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <None Include="..\libs\bin\bergamot.dll">
+    <None Include="..\libs\bin\win\bergamot.dll" Condition="Exists('..\libs\bin\win\bergamot.dll')">
       <Pack>true</Pack>
       <PackagePath>runtimes\win-x64\native</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\libs\lib\linux\libbergamot.so" Condition="Exists('..\libs\lib\linux\libbergamot.so')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes\linux-x64\native</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
