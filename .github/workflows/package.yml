@@ -193,10 +193,10 @@ jobs:
         uses: gittools/actions/gitversion/execute@v3.1.11
       - uses: actions/download-artifact@v4
       - run: |
-          dotnet pack BergamotTranslatorSharp -c Release -o pack ^
-            -p:Version=${{ steps.gitversion.outputs.fullSemVer }} ^
-            -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} ^
-            -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} ^
+          dotnet pack BergamotTranslatorSharp -c Release -o pack \
+            -p:Version=${{ steps.gitversion.outputs.fullSemVer }} \
+            -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} \
+            -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} \
             -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
       - uses: actions/upload-artifact@v4
         with:
