@@ -38,7 +38,7 @@ dotnet add package BergamotTranslatorSharp
 
 - .NET 6.0 以上
 - .NET Standard 2.1 以上
-- Windows x64
+- Windows x64 or Linux x64
 
 ## 使用方法
 
