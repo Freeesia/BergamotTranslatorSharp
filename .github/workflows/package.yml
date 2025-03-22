@@ -206,8 +206,7 @@ jobs:
           name: nupkg
           path: pack/*
       - if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
-        run: |
-          dotnet nuget push pack\*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push pack/*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
       - if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
         uses: softprops/action-gh-release@v2
         with:
