@@ -75,7 +75,7 @@ extern "C"
             char *result = (char *)CoTaskMemAlloc(len);
 #else
             // tcmallocを直接使用してメモリ確保
-            char *result = (char *)tc_malloc(len);
+            char *result = (char *)malloc(len);
 #endif
             memcpy(result, translated.c_str(), len);
             return result;
