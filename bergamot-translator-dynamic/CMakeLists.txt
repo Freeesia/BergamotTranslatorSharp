@@ -17,6 +17,7 @@ target_include_directories(bergamot_translator_dynamic
 target_link_libraries(bergamot_translator_dynamic
   PUBLIC
     bergamot-translator
+    $<$<NOT:$<PLATFORM_ID:Windows>>:tcmalloc>
 )
 
 # コンパイルオプションの設定
@@ -32,12 +33,26 @@ target_compile_definitions(bergamot_translator_dynamic
     BERGAMOT_TRANSLATOR_DYNAMIC_EXPORTS
 )
 
-# インストール設定
-install(TARGETS bergamot_translator_dynamic
-  LIBRARY DESTINATION lib COMPONENT bergamot_translator_dynamic
-  RUNTIME DESTINATION bin COMPONENT bergamot_translator_dynamic
-  ARCHIVE DESTINATION lib COMPONENT bergamot_translator_dynamic
-)
+# プラットフォーム別のインストール設定
+if(WIN32)
+  install(TARGETS bergamot_translator_dynamic
+    RUNTIME DESTINATION bin/win COMPONENT bergamot_translator_dynamic
+    LIBRARY DESTINATION bin/win COMPONENT bergamot_translator_dynamic
+    ARCHIVE DESTINATION lib/win COMPONENT bergamot_translator_dynamic
+  )
+elseif(APPLE)
+  install(TARGETS bergamot_translator_dynamic
+    LIBRARY DESTINATION lib/macos COMPONENT bergamot_translator_dynamic
+    RUNTIME DESTINATION bin/macos COMPONENT bergamot_translator_dynamic
+    ARCHIVE DESTINATION lib/macos COMPONENT bergamot_translator_dynamic
+  )
+else() # Linux その他のUnix系
+  install(TARGETS bergamot_translator_dynamic
+    LIBRARY DESTINATION lib/linux COMPONENT bergamot_translator_dynamic
+    RUNTIME DESTINATION bin/linux COMPONENT bergamot_translator_dynamic
+    ARCHIVE DESTINATION lib/linux COMPONENT bergamot_translator_dynamic
+  )
+endif()
 
 install(FILES include/bergamot.h
   DESTINATION include
