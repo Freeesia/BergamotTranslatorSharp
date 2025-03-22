@@ -43,6 +43,15 @@ cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
 
 `bergamot-translator\.github\workflows\windows.yml`にビルド方法あるやん。
 
+#### Linux
+
+```bash
+cmake -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=ON ..
+cmake --build . --config Release --target bergamot_translator_dynamic
+cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
+```
+
+
 ## 実行
 
 ```bat
@@ -53,11 +62,11 @@ echo "Hello World!" | build-native\app\Debug\bergamot.exe --model-config-paths m
 
 * [x] Windows版のビルド通す
 * [x] Windows版の実行確認
-* [ ] ネイティブ動的ライブラリの作成
-* [ ] ネイティブ動的ライブラリを参照した.NETライブラリの作成
-* [ ] .NETライブラリを参照したサンプルアプリの作成
-* [ ] NuGetパッケージの作成
-* [ ] ドキュメントの作成
+* [x] ネイティブ動的ライブラリの作成
+* [x] ネイティブ動的ライブラリを参照した.NETライブラリの作成
+* [x] .NETライブラリを参照したサンプルアプリの作成
+* [x] NuGetパッケージの作成
+* [x] ドキュメントの作成
 * [ ] テストの作成
-* [ ] CI/CDの設定
-* [ ] リリース
+* [x] CI/CDの設定
+* [x] リリース

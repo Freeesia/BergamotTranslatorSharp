@@ -3,7 +3,11 @@
 #include "translator/response_options.h"
 #include "translator/service.h"
 #include "translator/translation_model.h"
+#ifdef _WIN32
 #include <combaseapi.h>
+#else
+#include <gperftools/tcmalloc.h>
+#endif
 
 using marian::bergamot::BlockingService;
 using marian::bergamot::parseOptionsFromFilePath;
@@ -67,7 +71,12 @@ extern "C"
         {
             auto translated = responses[0].target.text;
             size_t len = translated.size() + 1;
+#ifdef _WIN32
             char *result = (char *)CoTaskMemAlloc(len);
+#else
+            // tcmallocを直接使用してメモリ確保
+            char *result = (char *)tc_malloc(len);
+#endif
             memcpy(result, translated.c_str(), len);
             return result;
         }
