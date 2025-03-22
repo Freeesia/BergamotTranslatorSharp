@@ -41,8 +41,8 @@ jobs:
         id: ccache_vars
         run: |-
           string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
-          echo "timestamp=${current_date}" >> $env:GITHUB_OUTPUT
-          echo "hash=${{ env.ccache_compilercheck }}" >> $env:GITHUB_OUTPUT
+          message("::set-output name=timestamp::${current_date}")
+          message("::set-output name=hash::${{ env.ccache_compilercheck }}")
 
       - name: Cache-op for build-cache through ccache
         uses: actions/cache@v4
