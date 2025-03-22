@@ -133,7 +133,7 @@ jobs:
           echo "::set-output name=hash::$(echo ${{ env.ccache_compilercheck }})"
           echo "::set-output name=timestamp::$(date '+%Y-%m-%dT%H.%M.%S')"
       - name: Cache-op for build-cache through ccache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ env.ccache_dir }}
           key: ccache-linux-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
