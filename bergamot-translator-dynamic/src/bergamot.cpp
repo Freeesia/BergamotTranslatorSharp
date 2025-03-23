@@ -45,7 +45,7 @@ extern "C"
         return static_cast<void *>(state);
     }
 
-    char *translator_translate(void *translator, const char *text)
+    char *translator_translate(void *translator, const char *text, bool html)
     {
         if (!translator || !text)
         {
@@ -56,6 +56,7 @@ extern "C"
 
         // 翻訳オプションの設定
         ResponseOptions responseOptions;
+        responseOptions.HTML = html;  // HTMLパラメータを設定
 
         // 翻訳実行
         std::vector<std::string> sources = {text};

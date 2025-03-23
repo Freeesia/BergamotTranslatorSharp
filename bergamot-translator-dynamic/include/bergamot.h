@@ -28,9 +28,10 @@ extern "C"
    * @brief テキストを翻訳
    * @param translator 初期化済みトランスレーターのポインタ
    * @param text 翻訳するテキスト
+   * @param html HTMLタグを処理するかどうか
    * @return 翻訳結果（テキストは呼び出し側が解放する必要がある）
    */
-  BERGAMOT_API char *translator_translate(void *translator, const char *text);
+  BERGAMOT_API char *translator_translate(void *translator, const char *text, bool html);
 
   /**
    * @brief トランスレーターを解放
