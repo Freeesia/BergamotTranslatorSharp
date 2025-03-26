@@ -9,7 +9,7 @@ public sealed class BlockingService : IDisposable
 
     // P/Invoke定義
     [DllImport("bergamot", CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr translator_initialize(string configPath);
+    private static extern IntPtr translator_initialize([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] configPaths, int count);
 
     [DllImport("bergamot", CallingConvention = CallingConvention.Cdecl)]
     private static extern void translator_free(IntPtr translator);
@@ -18,9 +18,9 @@ public sealed class BlockingService : IDisposable
     [return: MarshalAs(UnmanagedType.LPUTF8Str)]
     private static extern string translator_translate(IntPtr translator, string text);
 
-    public BlockingService(string configPath)
+    public BlockingService(params string[] configPaths)
     {
-        translator = translator_initialize(configPath);
+        translator = translator_initialize(configPaths, configPaths.Length);
         if (translator == IntPtr.Zero)
         {
             throw new InvalidOperationException("Failed to create translator instance");

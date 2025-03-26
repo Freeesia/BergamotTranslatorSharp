@@ -20,7 +20,7 @@ struct BergamotTranslatorState
 {
     // BlockingServiceとTranslationModelのインスタンスを保持
     std::unique_ptr<BlockingService> service;
-    std::shared_ptr<TranslationModel> model;
+    std::vector<std::shared_ptr<TranslationModel>> models;
 
     BergamotTranslatorState() {}
     ~BergamotTranslatorState() {}
@@ -28,8 +28,11 @@ struct BergamotTranslatorState
 
 extern "C"
 {
-    void *translator_initialize(const char *configPath)
+    void *translator_initialize(const char **configPaths, int numPaths)
     {
+        if (!configPaths || numPaths <= 0 || numPaths > 2)
+            return nullptr;
+
         // BlockingServiceの設定
         BlockingService::Config serviceConfig;
 
@@ -39,9 +42,23 @@ extern "C"
         // BlockingServiceのインスタンス作成
         state->service = std::make_unique<BlockingService>(serviceConfig);
 
-        auto options = parseOptionsFromFilePath(configPath);
-        // モデルのインスタンス作成
-        state->model = std::make_shared<TranslationModel>(options);
+        // 各設定ファイルからモデルを作成
+        for (int i = 0; i < numPaths; i++)
+        {
+            if (configPaths[i])
+            {
+                auto options = parseOptionsFromFilePath(configPaths[i]);
+                state->models.push_back(std::make_shared<TranslationModel>(options));
+            }
+        }
+
+        // モデルがひとつもロードできなかった場合は失敗
+        if (state->models.empty())
+        {
+            delete state;
+            return nullptr;
+        }
+
         return static_cast<void *>(state);
     }
 
@@ -57,14 +74,23 @@ extern "C"
         // 翻訳オプションの設定
         ResponseOptions responseOptions;
 
-        // 翻訳実行
+        // 翻訳実行（最初のモデルを使用）
         std::vector<std::string> sources = {text};
         std::vector<ResponseOptions> options = {responseOptions};
 
-        std::vector<Response> responses = state->service->translateMultiple(
-            state->model,
-            std::move(sources),
-            options);
+        std::vector<Response> responses;
+        if (state->models.size() == 1)
+        {
+            responses = state->service->translateMultiple(state->models[0], std::move(sources), options);
+        }
+        else if (state->models.size() == 2)
+        {
+            responses = state->service->pivotMultiple(state->models[0], state->models[1], std::move(sources), options);
+        }
+        else
+        {
+            return nullptr;
+        }
 
         // 翻訳結果を取得
         if (!responses.empty())

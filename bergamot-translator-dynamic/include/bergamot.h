@@ -19,10 +19,11 @@ extern "C"
 
   /**
    * @brief Bergamot翻訳エンジンを初期化
-   * @param configPath 設定ファイルのパス
+   * @param configPaths 設定ファイルパスの配列
+   * @param numPaths 配列内の設定ファイル数
    * @return 初期化されたトランスレーターのポインタ、失敗した場合はNULL
    */
-  BERGAMOT_API void *translator_initialize(const char *configPath);
+  BERGAMOT_API void *translator_initialize(const char **configPaths, int numPaths);
 
   /**
    * @brief テキストを翻訳
