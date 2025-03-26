@@ -16,7 +16,7 @@ public sealed class BlockingService : IDisposable
 
     [DllImport("bergamot", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.LPUTF8Str)]
-    private static extern string translator_translate(IntPtr translator, string text);
+    private static extern string translator_translate(IntPtr translator, [MarshalAs(UnmanagedType.LPUTF8Str)] string text);
 
     public BlockingService(params string[] configPaths)
     {
