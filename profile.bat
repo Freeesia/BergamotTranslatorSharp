@@ -14,18 +14,3 @@ if not defined VSDIR (
     exit /b 1
 )
 call "%VSDIR%\Common7\Tools\VsDevCmd.bat" -startdir=none -arch=x64 -host_arch=x64
-
-
-set "oneAPISetVars="
-if exist "%ProgramFiles(x86)%\Intel\oneAPI\setvars.bat" (
-    set "oneAPISetVars=%ProgramFiles(x86)%\Intel\oneAPI\setvars.bat"
-) else if exist "%ProgramFiles%\Intel\oneAPI\setvars.bat" (
-    set "oneAPISetVars=%ProgramFiles%\Intel\oneAPI\setvars.bat"
-)
-
-if defined oneAPISetVars (
-    call "%oneAPISetVars%"
-) else (
-    echo Not found: Intel oneAPI
-    exit /b 1
-)
