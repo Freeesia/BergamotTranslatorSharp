@@ -17,7 +17,6 @@ target_include_directories(bergamot_translator_dynamic
 target_link_libraries(bergamot_translator_dynamic
   PUBLIC
     bergamot-translator
-    $<$<NOT:$<PLATFORM_ID:Windows>>:tcmalloc>
 )
 
 # コンパイルオプションの設定

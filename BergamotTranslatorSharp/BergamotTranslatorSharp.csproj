@@ -16,6 +16,11 @@
       <PackagePath>runtimes\linux-x64\native</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\libs\lib\macos\libbergamot.dylib" Condition="Exists('..\libs\lib\macos\libbergamot.dylib')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes\macos\native</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
