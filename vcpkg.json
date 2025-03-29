@@ -1,5 +1,6 @@
 {
   "dependencies": [
-    "pcre2"
+    "pcre2",
+    "intel-mkl"
   ]
 }

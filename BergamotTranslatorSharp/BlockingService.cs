@@ -45,8 +45,11 @@ public sealed class BlockingService : IDisposable
 
             // アンマネージド リソース (アンマネージド オブジェクト) を解放し、ファイナライザーをオーバーライドします
             // 大きなフィールドを null に設定します
-            translator_free(translator);
-            translator = IntPtr.Zero;
+            if (translator != IntPtr.Zero)
+            {
+                translator_free(translator);
+                translator = IntPtr.Zero;
+            }
             disposedValue = true;
         }
     }
