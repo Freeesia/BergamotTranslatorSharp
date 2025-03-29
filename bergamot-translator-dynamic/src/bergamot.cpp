@@ -1,4 +1,5 @@
 ﻿#include "bergamot.h"
+#include "3rd_party/marian-dev/src/3rd_party/spdlog/spdlog.h"
 #include "translator/response.h"
 #include "translator/response_options.h"
 #include "translator/service.h"
@@ -41,6 +42,8 @@ extern "C"
 
         // BlockingServiceのインスタンス作成
         state->service = std::make_unique<BlockingService>(serviceConfig);
+        // ログが重複するとエラーになり複数インスタンス作れないので、全てのログをドロップ
+        spdlog::drop_all();
 
         // 各設定ファイルからモデルを作成
         for (int i = 0; i < numPaths; i++)
