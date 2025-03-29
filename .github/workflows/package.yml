@@ -19,6 +19,7 @@ jobs:
       CCACHE_COMPRESSLEVEL: 9
       CCACHE_MAXSIZE: 200M
       ccache_version: "4.5"
+      VCPKG_DEFAULT_BINARY_CACHE: "${{ github.workspace }}\\vcpkg"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,6 +53,16 @@ jobs:
             ccache-windows-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
             ccache-windows-x64-${{ steps.ccache_vars.outputs.hash }}
             ccache-windows-x64
+
+      - name: Cache-op for build-cache through vcpkg
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-windows-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
+          restore-keys: |-
+            vcpkg-windows-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
+            vcpkg-windows-x64-${{ steps.ccache_vars.outputs.hash }}
+            vcpkg-windows-x64
 
       - name: ccache prolog
         run: |-
