@@ -109,7 +109,7 @@ jobs:
       ccache_basedir: ${{ github.workspace }}
       ccache_dir: "${{ github.workspace }}/.ccache"
       ccache_compilercheck: content
-      ccache_compress: 'true'
+      ccache_compress: "true"
       ccache_compresslevel: 9
       ccache_maxsize: 200M
       ccache_cmake: -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
@@ -167,17 +167,93 @@ jobs:
         working-directory: build
         run: cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
       - name: ccache epilog
-        run: 'ccache -s # Print current cache stats'
+        run: "ccache -s # Print current cache stats"
       - uses: actions/upload-artifact@v4
         with:
           name: libs-linux
           path: libs/*
+
+  macos:
+    runs-on: macos-latest
+    name: Build macOS Native Lib
+    env:
+      ccache_basedir: ${{ github.workspace }}
+      ccache_dir: "${{ github.workspace }}/.ccache"
+      ccache_compilercheck: content
+      ccache_compress: "true"
+      ccache_compresslevel: 9
+      ccache_maxsize: 200M
+      ccache_cmake: -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Dependencies
+        run: |
+          brew install ccache protobuf boost cmake
+
+      - name: Generate ccache_vars for ccache based on machine
+        shell: bash
+        id: ccache_vars
+        run: |-
+          echo "hash=$(echo ${{ env.ccache_compilercheck }})" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date '+%Y-%m-%dT%H.%M.%S')" >> $GITHUB_OUTPUT
+
+      - name: Cache-op for build-cache through ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.ccache_dir }}
+          key: ccache-macos-arm64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
+          restore-keys: |-
+            ccache-macos-arm64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
+            ccache-macos-arm64-${{ steps.ccache_vars.outputs.hash }}
+            ccache-macos-arm64
+
+      - name: ccache environment setup
+        run: |-
+          echo "CCACHE_COMPILER_CHECK=${{ env.ccache_compilercheck }}" >> $GITHUB_ENV
+          echo "CCACHE_BASEDIR=${{ env.ccache_basedir }}" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESS=${{ env.ccache_compress }}" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESSLEVEL=${{ env.ccache_compresslevel }}" >> $GITHUB_ENV
+          echo "CCACHE_DIR=${{ env.ccache_dir }}" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=${{ env.ccache_maxsize }}" >> $GITHUB_ENV
+
+      - name: ccache prolog
+        run: |-
+          ccache -s # Print current cache stats
+          ccache -z # Zero cache entry
+
+      - name: cmake
+        run: |-
+          mkdir -p build
+          cd build
+          cmake -L .. ${{ env.ccache_cmake }} -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=ON -DCMAKE_OSX_ARCHITECTURES=arm64
+
+      - name: Build from source
+        working-directory: build
+        run: cmake --build . --config Release -j3 --target bergamot_translator_dynamic
+
+      - name: Install
+        working-directory: build
+        run: cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
+
+      - name: ccache epilog
+        run: "ccache -s # Print current cache stats"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libs-macos-arm64
+          path: libs/*
+
   dotnet:
     runs-on: ubuntu-latest
     name: Build .NET Lib
     needs:
       - win
       - linux
+      - macos
     permissions:
       contents: write
     steps:
