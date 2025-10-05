@@ -34,13 +34,15 @@ nmake
 👆だと結局PCRE2が無理なので、vckg通す
 ```bat
 mkdir build-win
-cmake -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=ON -DVCPKG_TARGET_TRIPLET="x64-windows-static" ..
+cd build-win
+cmake -DBUILD_ARCH=corei7-avx -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=ON -DVCPKG_TARGET_TRIPLET="x64-windows-static" ..
 cmake --build . --config Release --target bergamot_translator_dynamic
 cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
 ```
 
 ```bat
 mkdir build-win-arm
+cd build-win-arm
 cmake -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=ON -DVCPKG_TARGET_TRIPLET="arm64-windows-static" ..
 cmake --build . --config Release --target bergamot_translator_dynamic
 cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
