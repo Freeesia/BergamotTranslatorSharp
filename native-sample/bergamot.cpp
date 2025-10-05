@@ -14,8 +14,12 @@ int main(int argc, char *argv[]) {
   // モデル設定ファイルのパス
   const char* configPath = argv[1];
 
-  // 翻訳エンジンの初期化
-  void* translator = translator_initialize(configPath);
+  // configPathのアドレスを渡すためのポインタ
+  const char* configPaths[] = { configPath };
+
+  // 必要な引数をtranslator_initializeに渡す
+  // 例: translator_initialize(const char** configPaths, int numPaths)
+  void* translator = translator_initialize(configPaths, 1);
   if (!translator) {
     std::cout << "Failed to initialize translator";
     return 2;
