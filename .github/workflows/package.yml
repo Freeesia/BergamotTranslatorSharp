@@ -192,7 +192,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          brew install ccache protobuf boost cmake
+          brew install ccache protobuf boost cmake llvm@18
 
       - name: Generate ccache_vars for ccache based on machine
         shell: bash
@@ -227,9 +227,16 @@ jobs:
 
       - name: cmake
         run: |-
+          LLVM_PREFIX="$(brew --prefix llvm@18)"
           mkdir -p build
           cd build
-          cmake -L .. ${{ env.ccache_cmake }} -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=ON -DCMAKE_OSX_ARCHITECTURES=arm64
+          cmake -L .. ${{ env.ccache_cmake }} \
+            -DCMAKE_C_COMPILER="$LLVM_PREFIX/bin/clang" \
+            -DCMAKE_CXX_COMPILER="$LLVM_PREFIX/bin/clang++" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DUSE_STATIC_LIBS=ON \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DGIT_SUBMODULE=OFF
 
       - name: Build from source
         working-directory: build

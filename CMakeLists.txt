@@ -64,5 +64,14 @@ if(MSVC)
 endif(MSVC)
 
 add_subdirectory(bergamot-translator)
+
+if(APPLE AND TARGET zlib)
+  target_compile_options(zlib PRIVATE -UTARGET_OS_MAC)
+endif()
+
+if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND TARGET marian)
+  target_compile_options(marian PRIVATE -Wno-error=vla-cxx-extension)
+endif()
+
 add_subdirectory(bergamot-translator-dynamic)
 add_subdirectory(native-sample)
