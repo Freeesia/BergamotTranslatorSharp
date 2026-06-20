@@ -4,10 +4,11 @@
 #include "translator/response_options.h"
 #include "translator/service.h"
 #include "translator/translation_model.h"
-#include <cstdlib>
 #include <cstring>
 #ifdef _WIN32
 #include <combaseapi.h>
+#else
+#include <gperftools/tcmalloc.h>
 #endif
 
 using marian::bergamot::BlockingService;
@@ -103,9 +104,13 @@ extern "C"
 #ifdef _WIN32
             char *result = (char *)CoTaskMemAlloc(len);
 #else
-            // 非Windowsでは標準のmallocでメモリ確保
-            char *result = (char *)std::malloc(len);
+            // 非Windowsではtcmallocでメモリ確保
+            char *result = (char *)tc_malloc(len);
 #endif
+            if (!result)
+            {
+                return nullptr;
+            }
             std::memcpy(result, translated.c_str(), len);
             return result;
         }

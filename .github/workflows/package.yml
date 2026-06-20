@@ -192,7 +192,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          brew install ccache protobuf boost cmake llvm@18
+          brew install ccache protobuf boost cmake llvm@18 gperftools
 
       - name: Generate ccache_vars for ccache based on machine
         shell: bash
