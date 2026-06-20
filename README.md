@@ -5,7 +5,7 @@
 [![NuGet Version](https://img.shields.io/nuget/v/BergamotTranslatorSharp)](https://www.nuget.org/packages/BergamotTranslatorSharp)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/BergamotTranslatorSharp)](https://www.nuget.org/packages/BergamotTranslatorSharp)
 
-BergamotTranslatorSharp is a C# wrapper for Bergamot Translator. It allows easy integration of an offline machine translation engine into .NET applications.
+BergamotTranslatorSharp is a C# wrapper for Bergamot Translator. It allows .NET applications to use an offline machine translation engine.
 
 | [EN](README.md) | [JA](README.ja.md) |
 
@@ -22,15 +22,15 @@ BergamotTranslatorSharp is a C# wrapper for Bergamot Translator. It allows easy 
 
 ## Installation
 
-### Installation from NuGet
+### Install from NuGet
 
-```
+```powershell
 Install-Package BergamotTranslatorSharp
 ```
 
-Or
+Or:
 
-```
+```bash
 dotnet add package BergamotTranslatorSharp
 ```
 
@@ -42,57 +42,118 @@ dotnet add package BergamotTranslatorSharp
 
 ## Usage
 
-### Downloading Models and Creating Configuration Files
+### 1. Download models
 
-1. Download and extract models from the [Firefox Translations models](https://github.com/mozilla/firefox-translations-models) official website.
-    ```bash
-    cd test_page
-    git clone --depth 1 --branch main --single-branch https://github.com/mozilla/firefox-translations-models/
-    mkdir models
-    cp -rf firefox-translations-models/registry.json models
-    cp -rf firefox-translations-models/models/prod/* models
-    cp -rf firefox-translations-models/models/dev/* models
-    gunzip models/*/*
-    ```
-2. Create a configuration file in the same location as the binary file.
-    ```yml
-    relative-paths: true
-    models:
-    - model.enja.intgemm.alphas.bin // model path
-    vocabs:
-    - vocab.enja.spm // source vocabulary path
-    - vocab.enja.spm // target vocabulary path
-    shortlist:
-    - lex.50.50.enja.s2t.bin // shortlist path
-    - false
-    beam-size: 1
-    normalize: 1.0
-    word-penalty: 0
-    max-length-break: 128
-    mini-batch-words: 1024
-    workspace: 128
-    max-length-factor: 2.0
-    skip-cost: true
-    cpu-threads: 0
-    quiet: true
-    quiet-translation: true
-    gemm-precision: int8shiftAlphaAll // specify 'int8shiftAlphaAll' if the model name contains 'alphas', otherwise specify 'int8shiftAll'
-    ```
+Download and extract models from [Firefox Translations models](https://github.com/mozilla/firefox-translations-models).
 
-### Initializing the Translation Service and Translating
+```bash
+git clone --depth 1 --branch main --single-branch https://github.com/mozilla/firefox-translations-models/
+mkdir models
+cp -rf firefox-translations-models/registry.json models
+cp -rf firefox-translations-models/models/prod/* models
+cp -rf firefox-translations-models/models/dev/* models
+gunzip models/*/*
+```
+
+After extraction, choose the model directory for the translation direction you want to use. For example, use a `deen` model directory for German to English, or an `enja` model directory for English to Japanese.
+
+### 2. Create a configuration file
+
+Create a `config.yml` or `config.txt` file in the same directory as the model files.
+
+Example for an English to Japanese model:
+
+```yml
+relative-paths: true
+models:
+- model.enja.intgemm.alphas.bin
+vocabs:
+- vocab.enja.spm
+- vocab.enja.spm
+shortlist:
+- lex.50.50.enja.s2t.bin
+- false
+beam-size: 1
+normalize: 1.0
+word-penalty: 0
+max-length-break: 128
+mini-batch-words: 1024
+workspace: 128
+max-length-factor: 2.0
+skip-cost: true
+cpu-threads: 0
+quiet: true
+quiet-translation: true
+gemm-precision: int8shiftAlphaAll
+```
+
+Notes:
+
+- The file names in `models`, `vocabs`, and `shortlist` must match the files in the selected model directory.
+- If the model file name contains `alphas`, use `gemm-precision: int8shiftAlphaAll`.
+- Otherwise, use `gemm-precision: int8shiftAll`.
+- When `relative-paths: true` is used, keep the configuration file and the model files together, or update the paths accordingly.
+
+### 3. Translate text from C#
+
+The current API uses `BlockingService`. Pass one or two configuration file paths to the constructor.
 
 ```cs
 using BergamotTranslatorSharp;
 
-// Create an instance of BergamotTranslator
-using var translator = new BergamotTranslator(configPath);
+var configPath = Path.Combine(
+    AppDomain.CurrentDomain.BaseDirectory,
+    "models",
+    "enja",
+    "config.txt");
 
-// Execute translation
-string sourceText = "Hello, world!";
-string translatedText = translator.Translate(sourceText);
+using var service = new BlockingService(configPath);
 
-Console.WriteLine(translatedText); // こんにちは、世界！
+var translated = service.Translate("Hello, world!");
+
+Console.WriteLine(translated);
 ```
+
+If you pass one configuration file path, `BlockingService` uses that model directly.
+If you pass two configuration file paths, the native service uses them as a pivot translation chain.
+
+### 4. Run the managed sample
+
+`ManagedSample` follows this argument format:
+
+```text
+ManagedSample <config-paths>[..] <text>
+```
+
+All arguments except the last one are treated as configuration file paths. The last argument is treated as the source text.
+
+Example:
+
+```bash
+dotnet run --project ManagedSample -- ./models/enja/config.txt "Hello, world!"
+```
+
+For pivot translation, pass two configuration files before the text:
+
+```bash
+dotnet run --project ManagedSample -- ./models/source-pivot/config.txt ./models/pivot-target/config.txt "Hello, world!"
+```
+
+## Troubleshooting
+
+### `Failed to create translator instance`
+
+This usually means the model could not be loaded. Check the following:
+
+- The configuration file path is correct.
+- The model, vocabulary, and shortlist files exist.
+- The file names in the configuration file match the actual files.
+- `gemm-precision` matches the model type.
+- The native `bergamot` library can be loaded on your platform.
+
+### No translation or unexpected output
+
+Check that the model direction matches the input language. For example, a `deen` model is intended for German to English input, while an `enja` model is intended for English to Japanese input.
 
 ## License
 

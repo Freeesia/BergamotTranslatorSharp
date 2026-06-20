@@ -488,4 +488,4 @@ build*/
 models/
 libs/
 
-test.txt
+/test.*
