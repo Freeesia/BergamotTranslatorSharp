@@ -484,7 +484,6 @@ $RECYCLE.BIN/
 *.swp
 
 build*/
-.ccache/
 models/
 libs/
 

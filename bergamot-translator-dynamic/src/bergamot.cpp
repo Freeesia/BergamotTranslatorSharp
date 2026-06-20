@@ -4,7 +4,6 @@
 #include "translator/response_options.h"
 #include "translator/service.h"
 #include "translator/translation_model.h"
-#include <cstring>
 #ifdef _WIN32
 #include <combaseapi.h>
 #else
@@ -104,14 +103,10 @@ extern "C"
 #ifdef _WIN32
             char *result = (char *)CoTaskMemAlloc(len);
 #else
-            // 非Windowsではtcmallocでメモリ確保
-            char *result = (char *)tc_malloc(len);
+            // tcmallocを直接使用してメモリ確保
+            char *result = (char *)malloc(len);
 #endif
-            if (!result)
-            {
-                return nullptr;
-            }
-            std::memcpy(result, translated.c_str(), len);
+            memcpy(result, translated.c_str(), len);
             return result;
         }
 
