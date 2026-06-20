@@ -13,11 +13,36 @@ target_include_directories(bergamot_translator_dynamic
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+if(APPLE)
+  set(GPERFTOOLS_ROOT "" CACHE PATH "gperftools installation prefix")
+  find_path(BERGAMOT_TCMALLOC_INCLUDE_DIR
+    NAMES gperftools/tcmalloc.h
+    HINTS "${GPERFTOOLS_ROOT}"
+    PATH_SUFFIXES include
+  )
+  find_library(BERGAMOT_TCMALLOC_LIBRARY
+    NAMES libtcmalloc.a tcmalloc
+    HINTS "${GPERFTOOLS_ROOT}"
+    PATH_SUFFIXES lib
+  )
+  if(NOT BERGAMOT_TCMALLOC_INCLUDE_DIR OR NOT BERGAMOT_TCMALLOC_LIBRARY)
+    message(FATAL_ERROR "Could not find gperftools/tcmalloc. Install gperftools.")
+  endif()
+  add_library(bergamot_tcmalloc UNKNOWN IMPORTED)
+  set_target_properties(bergamot_tcmalloc PROPERTIES
+    IMPORTED_LOCATION "${BERGAMOT_TCMALLOC_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${BERGAMOT_TCMALLOC_INCLUDE_DIR}"
+  )
+  set(BERGAMOT_TCMALLOC_TARGET bergamot_tcmalloc)
+else()
+  set(BERGAMOT_TCMALLOC_TARGET tcmalloc)
+endif()
+
 # 必要な依存ライブラリのリンク
 target_link_libraries(bergamot_translator_dynamic
   PUBLIC
     bergamot-translator
-    $<$<NOT:$<PLATFORM_ID:Windows>>:tcmalloc>
+    $<$<NOT:$<PLATFORM_ID:Windows>>:${BERGAMOT_TCMALLOC_TARGET}>
 )
 
 # コンパイルオプションの設定
