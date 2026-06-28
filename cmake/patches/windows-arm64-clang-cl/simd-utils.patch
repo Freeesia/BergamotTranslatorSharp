@@ -1,0 +1,18 @@
+diff --git a/sse2neon.h b/sse2neon.h
+index 59fff6d..c132f5b 100644
+--- a/sse2neon.h
++++ b/sse2neon.h
+@@ -103,0 +104,5 @@
++#if defined(_WIN32)
++#define SSE2NEON_ALLOC_DEFINED
++#include <malloc.h>
++#endif
++
+@@ -1751,0 +1757 @@ FORCE_INLINE __m128 _mm_div_ss(__m128 a, __m128 b)
++#if !defined(SSE2NEON_ALLOC_DEFINED)
+@@ -1755,0 +1762 @@ FORCE_INLINE void _mm_free(void *addr)
++#endif
+@@ -1936,0 +1944 @@ FORCE_INLINE __m128i _mm_loadu_si64(const void *p)
++#if !defined(SSE2NEON_ALLOC_DEFINED)
+@@ -1947,0 +1956 @@ FORCE_INLINE void *_mm_malloc(size_t size, size_t align)
++#endif

@@ -38,7 +38,19 @@ dotnet add package BergamotTranslatorSharp
 
 - .NET 6.0 or later
 - .NET Standard 2.1 or later
-- Windows x64 or Linux x64
+- Windows x64, Windows ARM64, or Linux x64
+
+### Build the native library from source
+
+Windows ARM64 builds use vcpkg and Visual Studio's ARM64 clang-cl toolchain.
+From an ARM64 developer prompt, set `VCPKG_ROOT` and run:
+
+```bat
+set VCPKG_ROOT=C:\vcpkg
+cmake --preset windows-arm64-clangcl-release
+cmake --build --preset windows-arm64-clangcl-release
+cmake --install out\build\windows-arm64-clangcl-release --prefix libs --component bergamot_translator_dynamic
+```
 
 ## Usage
 

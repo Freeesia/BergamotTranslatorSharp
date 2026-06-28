@@ -20,6 +20,81 @@ project(bergamot CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" BERGAMOT_SYSTEM_PROCESSOR)
+set(BERGAMOT_TARGET_ARM64 OFF)
+if(BERGAMOT_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+  set(BERGAMOT_TARGET_ARM64 ON)
+endif()
+
+set(BERGAMOT_TARGET_CLANG_CL OFF)
+if(MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(BERGAMOT_TARGET_CLANG_CL ON)
+endif()
+
+function(bergamot_apply_dependency_patch repository patch_file)
+  find_package(Git REQUIRED)
+  set(BERGAMOT_GIT_ARGS
+    -c "safe.directory=${repository}"
+    -C "${repository}"
+    apply --ignore-space-change --unidiff-zero)
+
+  execute_process(
+    COMMAND "${GIT_EXECUTABLE}" ${BERGAMOT_GIT_ARGS} --reverse --check "${patch_file}"
+    RESULT_VARIABLE BERGAMOT_PATCH_ALREADY_APPLIED
+    OUTPUT_QUIET ERROR_QUIET)
+  if(BERGAMOT_PATCH_ALREADY_APPLIED EQUAL 0)
+    return()
+  endif()
+
+  execute_process(
+    COMMAND "${GIT_EXECUTABLE}" ${BERGAMOT_GIT_ARGS} --check "${patch_file}"
+    RESULT_VARIABLE BERGAMOT_PATCH_CHECK_RESULT
+    OUTPUT_QUIET ERROR_VARIABLE BERGAMOT_PATCH_CHECK_ERROR)
+  if(NOT BERGAMOT_PATCH_CHECK_RESULT EQUAL 0)
+    message(FATAL_ERROR "Cannot apply ${patch_file}: ${BERGAMOT_PATCH_CHECK_ERROR}")
+  endif()
+
+  execute_process(
+    COMMAND "${GIT_EXECUTABLE}" ${BERGAMOT_GIT_ARGS} "${patch_file}"
+    RESULT_VARIABLE BERGAMOT_PATCH_RESULT
+    OUTPUT_QUIET ERROR_VARIABLE BERGAMOT_PATCH_ERROR)
+  if(NOT BERGAMOT_PATCH_RESULT EQUAL 0)
+    message(FATAL_ERROR "Failed to apply ${patch_file}: ${BERGAMOT_PATCH_ERROR}")
+  endif()
+endfunction()
+
+if(WIN32 AND BERGAMOT_TARGET_ARM64)
+  set(ARM ON CACHE BOOL "Build for ARM" FORCE)
+  set(USE_MKL OFF CACHE BOOL "Compile with MKL support" FORCE)
+
+  if(BERGAMOT_TARGET_CLANG_CL)
+    set(BERGAMOT_PATCH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/patches/windows-arm64-clang-cl")
+    set(BERGAMOT_MARIAN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/bergamot-translator/3rd_party/marian-dev")
+    bergamot_apply_dependency_patch(
+      "${CMAKE_CURRENT_SOURCE_DIR}/bergamot-translator"
+      "${BERGAMOT_PATCH_DIR}/bergamot-translator.patch")
+    bergamot_apply_dependency_patch(
+      "${BERGAMOT_MARIAN_DIR}"
+      "${BERGAMOT_PATCH_DIR}/marian-dev.patch")
+    bergamot_apply_dependency_patch(
+      "${BERGAMOT_MARIAN_DIR}/src/3rd_party/ruy"
+      "${BERGAMOT_PATCH_DIR}/ruy.patch")
+    bergamot_apply_dependency_patch(
+      "${BERGAMOT_MARIAN_DIR}/src/3rd_party/sentencepiece"
+      "${BERGAMOT_PATCH_DIR}/sentencepiece.patch")
+    bergamot_apply_dependency_patch(
+      "${BERGAMOT_MARIAN_DIR}/src/3rd_party/simd_utils"
+      "${BERGAMOT_PATCH_DIR}/simd-utils.patch")
+  endif()
+endif()
+
+function(bergamot_configure_windows_arm64_target target_name)
+  if(WIN32 AND BERGAMOT_TARGET_ARM64 AND MSVC AND TARGET ${target_name})
+    target_compile_options(${target_name} PUBLIC
+      /U__AVX__ /U__AVX2__ /U__SSE__ /U__SSE2__ /UUSE_SSE2)
+  endif()
+endfunction()
+
 # Setting BUILD_ARCH to native invokes CPU intrinsic detection logic below.
 # Prevent invoking that logic for WASM builds.
 set(BUILD_ARCH native CACHE STRING "Compile for this CPU architecture.")
@@ -29,7 +104,7 @@ set(BUILD_ARCH native CACHE STRING "Compile for this CPU architecture.")
 # references: https://clang.llvm.org/docs/UsersManual.html https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html https://gcc.gnu.org/onlinedocs/gcc-4.8.5/gcc/i386-and-x86-64-Options.html
 # https://docs.microsoft.com/en-us/cpp/build/reference/arch-x86?redirectedfrom=MSDN&amp;amp;view=vs-2019&view=msvc-170 https://devblogs.microsoft.com/oldnewthing/20201026-00/?p=104397
 # This is by no means an exhaustive list but should match the most common flags Linux programmers expect to parse to MSVC
-if(MSVC)
+if(MSVC AND NOT BERGAMOT_TARGET_ARM64)
   if(BUILD_ARCH STREQUAL "native") # avx2 is good default for native. Very few desktop systems support avx512
     set(MSVC_BUILD_ARCH "/arch:AVX2")
   elseif(BUILD_ARCH STREQUAL "skylake-avx512" OR BUILD_ARCH STREQUAL "cannonlake" OR BUILD_ARCH STREQUAL "x86-64-v4" OR BUILD_ARCH STREQUAL "tigerlake" OR BUILD_ARCH STREQUAL "cooperlake" OR BUILD_ARCH STREQUAL "cascadelake")
@@ -44,26 +119,45 @@ if(MSVC)
     message(WARNING "Unknown BUILD_ARCH ${BUILD_ARCH} provided. Default to SSE2 for Windows build")
     set(MSVC_BUILD_ARCH "/arch:SSE2")
   endif()
-endif(MSVC)
+elseif(MSVC)
+  set(MSVC_BUILD_ARCH "")
+endif()
 
 #MSVC can't seem to pick up correct flags otherwise:
 if(MSVC)
-  add_definitions(-DUSE_SSE2=1) # Supposed to fix something in the sse_mathfun.h but not sure it does
+  if(NOT BERGAMOT_TARGET_ARM64)
+    add_definitions(-DUSE_SSE2=1) # Supposed to fix something in the sse_mathfun.h but not sure it does
+  endif()
   set(INTRINSICS ${MSVC_BUILD_ARCH}) # ARCH we're targetting on win32. @TODO variable
   
   set(CMAKE_CXX_FLAGS           "/EHsc /DWIN32 /D_WINDOWS /DUNICODE /D_UNICODE /D_CRT_NONSTDC_NO_WARNINGS /D_CRT_SECURE_NO_WARNINGS /bigobj")
-  set(CMAKE_CXX_FLAGS_RELEASE   "${CMAKE_CXX_FLAGS} /MT /O2 ${INTRINSICS} /MP /GL /DNDEBUG")
+  if(BERGAMOT_TARGET_CLANG_CL)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} /MT /O2 ${INTRINSICS} /DNDEBUG")
+  else()
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} /MT /O2 ${INTRINSICS} /MP /GL /DNDEBUG")
+  endif()
   set(CMAKE_CXX_FLAGS_DEBUG     "${CMAKE_CXX_FLAGS} /MTd /Od /Ob0 ${INTRINSICS} /RTC1 /Zi /D_DEBUG")
 
   # ignores warning LNK4049: locally defined symbol free imported - this comes from zlib
-  set(CMAKE_EXE_LINKER_FLAGS         "${CMAKE_EXE_LINKER_FLAGS} /DEBUG /LTCG:incremental /INCREMENTAL:NO /ignore:4049")
+  if(BERGAMOT_TARGET_CLANG_CL)
+    set(CMAKE_EXE_LINKER_FLAGS       "${CMAKE_EXE_LINKER_FLAGS} /DEBUG /INCREMENTAL:NO /ignore:4049")
+  else()
+    set(CMAKE_EXE_LINKER_FLAGS       "${CMAKE_EXE_LINKER_FLAGS} /DEBUG /LTCG:incremental /INCREMENTAL:NO /ignore:4049")
+  endif()
   set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:MSVCRT")
   set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:MSVCRTD")
-  set(CMAKE_STATIC_LINKER_FLAGS      "${CMAKE_STATIC_LINKER_FLAGS} /LTCG:incremental")
+  if(NOT BERGAMOT_TARGET_CLANG_CL)
+    set(CMAKE_STATIC_LINKER_FLAGS    "${CMAKE_STATIC_LINKER_FLAGS} /LTCG:incremental")
+  endif()
   add_compile_options(/utf-8)
 endif(MSVC)
 
 add_subdirectory(bergamot-translator)
+bergamot_configure_windows_arm64_target(marian)
+bergamot_configure_windows_arm64_target(bergamot-translator)
+if(WIN32 AND BERGAMOT_TARGET_ARM64 AND BERGAMOT_TARGET_CLANG_CL AND TARGET marian)
+  target_compile_options(marian PRIVATE /WX-)
+endif()
 
 if(APPLE AND TARGET zlib)
   target_compile_options(zlib PRIVATE -UTARGET_OS_MAC)
@@ -74,4 +168,6 @@ if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND TARGET marian)
 endif()
 
 add_subdirectory(bergamot-translator-dynamic)
+bergamot_configure_windows_arm64_target(bergamot_translator_dynamic)
 add_subdirectory(native-sample)
+bergamot_configure_windows_arm64_target(native-sample)

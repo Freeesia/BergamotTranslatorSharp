@@ -1,0 +1,44 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-arm64-clangcl-release",
+      "displayName": "Windows ARM64 clang-cl Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "CMAKE_SYSTEM_PROCESSOR": "ARM64",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_POLICY_VERSION_MINIMUM": "3.5",
+        "USE_STATIC_LIBS": "ON",
+        "VCPKG_TARGET_TRIPLET": "arm64-windows-static",
+        "ARM": "ON",
+        "USE_MKL": "OFF",
+        "BUILD_ARCH": "armv8-a",
+        "GIT_SUBMODULE": "OFF"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-arm64-clangcl-release",
+      "configurePreset": "windows-arm64-clangcl-release",
+      "targets": [
+        "bergamot_translator_dynamic"
+      ]
+    }
+  ]
+}

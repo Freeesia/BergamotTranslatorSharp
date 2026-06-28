@@ -46,11 +46,11 @@ target_link_libraries(bergamot_translator_dynamic
 )
 
 # コンパイルオプションの設定
-target_compile_options(bergamot_translator_dynamic
-  PRIVATE
-    $<$<CXX_COMPILER_ID:MSVC>:/W4>
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra>
-)
+if(MSVC)
+  target_compile_options(bergamot_translator_dynamic PRIVATE /W4)
+else()
+  target_compile_options(bergamot_translator_dynamic PRIVATE -Wall -Wextra)
+endif()
 
 # DLLエクスポートマクロの定義
 target_compile_definitions(bergamot_translator_dynamic
@@ -60,10 +60,15 @@ target_compile_definitions(bergamot_translator_dynamic
 
 # プラットフォーム別のインストール設定
 if(WIN32)
+  set(BERGAMOT_WINDOWS_INSTALL_DIR "win")
+  if(BERGAMOT_TARGET_ARM64)
+    set(BERGAMOT_WINDOWS_INSTALL_DIR "win-arm64")
+  endif()
+
   install(TARGETS bergamot_translator_dynamic
-    RUNTIME DESTINATION bin/win COMPONENT bergamot_translator_dynamic
-    LIBRARY DESTINATION bin/win COMPONENT bergamot_translator_dynamic
-    ARCHIVE DESTINATION lib/win COMPONENT bergamot_translator_dynamic
+    RUNTIME DESTINATION bin/${BERGAMOT_WINDOWS_INSTALL_DIR} COMPONENT bergamot_translator_dynamic
+    LIBRARY DESTINATION bin/${BERGAMOT_WINDOWS_INSTALL_DIR} COMPONENT bergamot_translator_dynamic
+    ARCHIVE DESTINATION lib/${BERGAMOT_WINDOWS_INSTALL_DIR} COMPONENT bergamot_translator_dynamic
   )
 elseif(APPLE)
   install(TARGETS bergamot_translator_dynamic

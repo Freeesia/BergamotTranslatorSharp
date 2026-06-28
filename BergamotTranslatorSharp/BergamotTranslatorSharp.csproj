@@ -11,6 +11,11 @@
       <PackagePath>runtimes\win-x64\native</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\libs\bin\win-arm64\bergamot.dll" Condition="Exists('..\libs\bin\win-arm64\bergamot.dll')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes\win-arm64\native\</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\libs\lib\linux\libbergamot.so" Condition="Exists('..\libs\lib\linux\libbergamot.so')">
       <Pack>true</Pack>
       <PackagePath>runtimes\linux-x64\native</PackagePath>
