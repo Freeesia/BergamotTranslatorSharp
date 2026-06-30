@@ -1,6 +1,9 @@
 {
   "dependencies": [
     "pcre2",
-    "intel-mkl"
+    {
+      "name": "intel-mkl",
+      "platform": "x64 & (windows | linux)"
+    }
   ]
 }

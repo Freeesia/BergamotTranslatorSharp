@@ -1,0 +1,29 @@
+diff --git a/ruy/CMakeLists.txt b/ruy/CMakeLists.txt
+index 502ad8a..ae0f603 100644
+--- a/ruy/CMakeLists.txt
++++ b/ruy/CMakeLists.txt
+@@ -407,0 +408,2 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL Fuchsia)
++elseif(MSVC AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(ARM64|arm64|aarch64)$")
++  set(ruy_5_DRUY_HAVE_CPUINFO "")
+@@ -417,0 +420,2 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL Fuchsia)
++elseif(MSVC AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(ARM64|arm64|aarch64)$")
++  set(ruy_6_cpuinfo "")
+diff --git a/ruy/cpuinfo.cc b/ruy/cpuinfo.cc
+index a3e75d7..357cc51 100644
+--- a/ruy/cpuinfo.cc
++++ b/ruy/cpuinfo.cc
+@@ -10,0 +11,4 @@
++#if defined(_WIN32) && defined(_M_ARM64)
++#include <windows.h>
++#endif
++
+@@ -158 +162,8 @@ bool CpuInfo::EnsureInitialized() {
+-bool CpuInfo::NeonDotprod() { return false; }
++bool CpuInfo::NeonDotprod() {
++#if defined(_WIN32) && defined(_M_ARM64)
++  return IsProcessorFeaturePresent(
++             PF_ARM_V82_DP_INSTRUCTIONS_AVAILABLE) != FALSE;
++#else
++  return false;
++#endif
++}
