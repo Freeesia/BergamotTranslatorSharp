@@ -1,15 +1,17 @@
 ﻿using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace BergamotTranslatorSharp;
 
-public sealed class BlockingService : IDisposable
+public sealed partial class BlockingService : IDisposable
 {
     private IntPtr translator;
     private bool disposedValue;
 
     // P/Invoke定義
-    [DllImport("bergamot", CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr translator_initialize([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] configPaths, int count);
+    [LibraryImport("bergamot", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial IntPtr translator_initialize(string[] configPaths, int count);
 
     [DllImport("bergamot", CallingConvention = CallingConvention.Cdecl)]
     private static extern void translator_free(IntPtr translator);
@@ -20,7 +22,9 @@ public sealed class BlockingService : IDisposable
 
     public BlockingService(params string[] configPaths)
     {
+        ArgumentNullException.ThrowIfNull(configPaths);
         translator = translator_initialize(configPaths, configPaths.Length);
+
         if (translator == IntPtr.Zero)
         {
             throw new InvalidOperationException("Failed to create translator instance");

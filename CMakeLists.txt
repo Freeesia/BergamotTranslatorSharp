@@ -95,6 +95,16 @@ function(bergamot_configure_windows_arm64_target target_name)
   endif()
 endfunction()
 
+if(WIN32)
+  set(BERGAMOT_UTF8_PATH_PATCH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/patches/windows-utf8-paths")
+  bergamot_apply_dependency_patch(
+    "${CMAKE_CURRENT_SOURCE_DIR}/bergamot-translator"
+    "${BERGAMOT_UTF8_PATH_PATCH_DIR}/bergamot-translator.patch")
+  bergamot_apply_dependency_patch(
+    "${CMAKE_CURRENT_SOURCE_DIR}/bergamot-translator/3rd_party/marian-dev"
+    "${BERGAMOT_UTF8_PATH_PATCH_DIR}/marian-dev.patch")
+endif()
+
 # Setting BUILD_ARCH to native invokes CPU intrinsic detection logic below.
 # Prevent invoking that logic for WASM builds.
 set(BUILD_ARCH native CACHE STRING "Compile for this CPU architecture.")
