@@ -1,0 +1,9 @@
+diff --git a/src/translator/parser.cpp b/src/translator/parser.cpp
+index 5616e39..50c9cd2 100644
+--- a/src/translator/parser.cpp
++++ b/src/translator/parser.cpp
+@@ -5,0 +6 @@
++#include "common/file_stream.h"
+@@ -15 +16 @@ std::shared_ptr<marian::Options> parseOptionsFromFilePath(const std::string &configPath, bool validate /*= true*/) {
+-  std::ifstream readStream(configPath);
++  marian::io::InputFileStream readStream(configPath);

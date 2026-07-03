@@ -1,0 +1,58 @@
+diff --git a/src/3rd_party/cnpy/cnpy.cpp b/src/3rd_party/cnpy/cnpy.cpp
+index 9ad3c2fa..7332c349 100644
+--- a/src/3rd_party/cnpy/cnpy.cpp
++++ b/src/3rd_party/cnpy/cnpy.cpp
+@@ -13,0 +14,15 @@
++#ifdef _WIN32
++#include "common/filesystem.h"
++#endif
++
++namespace {
++FILE* openFileForReading(const std::string& fileName) {
++#ifdef _WIN32
++    auto nativeFile = marian::filesystem::Path(fileName).getImpl().native();
++    return _wfopen(nativeFile.c_str(), L"rb");
++#else
++    return fopen(fileName.c_str(), "rb");
++#endif
++}
++}
++
+@@ -161 +176 @@ cnpy::npz_t cnpy::npz_load(std::string fname) {
+-    FILE* fp = fopen(fname.c_str(),"rb");
++    FILE* fp = openFileForReading(fname);
+@@ -204 +219 @@ cnpy::NpyArrayPtr cnpy::npz_load(std::string fname, std::string varname) {
+-    FILE* fp = fopen(fname.c_str(),"rb");
++    FILE* fp = openFileForReading(fname);
+@@ -259 +274 @@ cnpy::NpyArrayPtr cnpy::npy_load(std::string fname) {
+-    FILE* fp = fopen(fname.c_str(), "rb");
++    FILE* fp = openFileForReading(fname);
+diff --git a/src/common/binary.cpp b/src/common/binary.cpp
+index 472f5a2b..62a5f801 100644
+--- a/src/common/binary.cpp
++++ b/src/common/binary.cpp
+@@ -99 +99,6 @@ void loadItems(const std::string& fileName, std::vector<io::Item>& items) {
++#ifdef _WIN32
++  auto nativeFile = filesystem::Path(fileName).getImpl().native();
++  FILE *f = _wfopen(nativeFile.c_str(), L"rb");
++#else
+   FILE *f = fopen(fileName.c_str(), "rb");
++#endif
+diff --git a/src/common/file_stream.cpp b/src/common/file_stream.cpp
+index 8c2e61d2..021cbdc2 100755
+--- a/src/common/file_stream.cpp
++++ b/src/common/file_stream.cpp
+@@ -42 +42,6 @@ InputFileStream::InputFileStream(const std::string &file)
++#ifdef _WIN32
++  auto nativeFile = file_.getImpl().native();
++  auto ret = static_cast<std::filebuf*>(streamBuf1_.get())->open(nativeFile.c_str(), std::ios::in | std::ios::binary);
++#else
+   auto ret = static_cast<std::filebuf*>(streamBuf1_.get())->open(file_.string().c_str(), std::ios::in | std::ios::binary);
++#endif
+@@ -96 +101,6 @@ OutputFileStream::OutputFileStream(const std::string &file)
++#ifdef _WIN32
++  auto nativeFile = file_.getImpl().native();
++  auto ret = static_cast<std::filebuf*>(streamBuf1_.get())->open(nativeFile.c_str(), std::ios::out | std::ios_base::binary);
++#else
+   auto ret = static_cast<std::filebuf*>(streamBuf1_.get())->open(file.c_str(), std::ios::out | std::ios_base::binary);
++#endif
