@@ -37,9 +37,8 @@ dotnet add package BergamotTranslatorSharp
 
 ### Requirements
 
-- .NET 6.0 or later
-- .NET Standard 2.1 or later
-- Windows x64, Windows ARM64, or Linux x64
+- .NET 8.0 or later
+- Windows x64, Windows ARM64, Linux x64, or macOS ARM64
 
 ### Build the native library from source
 
