@@ -43,7 +43,7 @@ public sealed partial class BlockingService : IDisposable
         return translator_translate(translator, text, html);
     }
 
-    public string[] TranslateMultiple(IEnumerable<string> texts)
+    public string[] Translate(IEnumerable<string> texts)
     {
         if (disposedValue)
             throw new ObjectDisposedException(nameof(BlockingService));
