@@ -51,6 +51,9 @@ extern "C"
             if (configPaths[i])
             {
                 auto options = parseOptionsFromFilePath(configPaths[i]);
+                // Marian must collect soft alignments while decoding so that a later
+                // HTML request can transfer source tags to the translated tokens.
+                options->set("alignment", "soft");
                 state->models.push_back(std::make_shared<TranslationModel>(options));
             }
         }
@@ -65,7 +68,7 @@ extern "C"
         return static_cast<void *>(state);
     }
 
-    char *translator_translate(void *translator, const char *text)
+    char *translator_translate(void *translator, const char *text, bool html)
     {
         if (!translator || !text)
         {
@@ -76,6 +79,7 @@ extern "C"
 
         // 翻訳オプションの設定
         ResponseOptions responseOptions;
+        responseOptions.HTML = html;
 
         // 翻訳実行（最初のモデルを使用）
         std::vector<std::string> sources = {text};

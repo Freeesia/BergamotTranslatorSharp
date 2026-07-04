@@ -18,6 +18,7 @@ BergamotTranslatorSharp is a C# wrapper for Bergamot Translator. It allows .NET 
 - Offline translation capability
 - Multi-language support
 - Fast processing
+- HTML markup preservation
 - Easy integration with .NET applications
 
 ## Installation
@@ -126,6 +127,12 @@ var translated = service.Translate("Hello, world!");
 Console.WriteLine(translated);
 ```
 
+To translate text content while preserving HTML markup, pass `true` as the second argument:
+
+```cs
+var translatedHtml = service.Translate("<p>Hello, <strong>world</strong>!</p>", html: true);
+```
+
 If you pass one configuration file path, `BlockingService` uses that model directly.
 If you pass two configuration file paths, the native service uses them as a pivot translation chain.
 
@@ -134,7 +141,7 @@ If you pass two configuration file paths, the native service uses them as a pivo
 `ManagedSample` follows this argument format:
 
 ```text
-ManagedSample <config-paths>[..] <text>
+ManagedSample [--html] <config-paths>[..] <text>
 ```
 
 All arguments except the last one are treated as configuration file paths. The last argument is treated as the source text.
@@ -143,6 +150,12 @@ Example:
 
 ```bash
 dotnet run --project ManagedSample -- ./models/enja/config.txt "Hello, world!"
+```
+
+For HTML input, add `--html` before the configuration paths:
+
+```bash
+dotnet run --project ManagedSample -- --html ./models/enja/config.txt "<p>Hello, <strong>world</strong>!</p>"
 ```
 
 For pivot translation, pass two configuration files before the text:
