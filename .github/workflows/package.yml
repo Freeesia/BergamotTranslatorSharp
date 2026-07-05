@@ -242,6 +242,78 @@ jobs:
           name: libs-linux
           path: libs/*
 
+  linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    name: Build Linux ARM64 Native Lib
+    env:
+      ccache_basedir: ${{ github.workspace }}
+      ccache_dir: "${{ github.workspace }}/.ccache"
+      ccache_compilercheck: content
+      ccache_compress: 'true'
+      ccache_compresslevel: 9
+      ccache_maxsize: 200M
+      ccache_cmake: -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Dependencies
+        run: |-
+          sudo apt-get update
+          sudo apt-get install -y libprotobuf-dev protobuf-compiler libboost-all-dev ccache ninja-build libunwind-dev libgoogle-perftools-dev
+      - name: Generate ccache_vars for ccache based on machine
+        shell: bash
+        id: ccache_vars
+        run: |-
+          echo "hash=$(echo ${{ env.ccache_compilercheck }})" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date '+%Y-%m-%dT%H.%M.%S')" >> $GITHUB_OUTPUT
+      - name: Cache-op for build-cache through ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.ccache_dir }}
+          key: ccache-linux-arm64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
+          restore-keys: |-
+            ccache-linux-arm64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
+            ccache-linux-arm64-${{ steps.ccache_vars.outputs.hash }}
+            ccache-linux-arm64
+      - name: ccache environment setup
+        run: |-
+          echo "CCACHE_COMPILER_CHECK=${{ env.ccache_compilercheck }}" >> $GITHUB_ENV
+          echo "CCACHE_BASEDIR=${{ env.ccache_basedir }}" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESS=${{ env.ccache_compress }}" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESSLEVEL=${{ env.ccache_compresslevel }}" >> $GITHUB_ENV
+          echo "CCACHE_DIR=${{ env.ccache_dir }}" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=${{ env.ccache_maxsize }}" >> $GITHUB_ENV
+      - name: ccache prolog
+        run: |-
+          ccache -s
+          ccache -z
+      - name: Configure
+        run: |-
+          cmake -S . -B build -G Ninja \
+            ${{ env.ccache_cmake }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DUSE_STATIC_LIBS=ON \
+            -DUSE_MKL=OFF \
+            -DBUILD_ARCH=native \
+            -DSSPLIT_USE_INTERNAL_PCRE2=ON \
+            -DGIT_SUBMODULE=OFF
+      - name: Build
+        run: cmake --build build --config Release -j3
+      - name: Install
+        run: cmake --install build --prefix libs --component bergamot_translator_dynamic
+      - name: Verify ARM64 artifact
+        run: |-
+          test -f libs/lib/linux-arm64/libbergamot.so
+          file libs/lib/linux-arm64/libbergamot.so | grep -q 'ARM aarch64'
+      - name: ccache epilog
+        run: ccache -s
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libs-linux-arm64
+          path: libs/*
+
   macos:
     runs-on: macos-latest
     name: Build macOS Native Lib
@@ -321,6 +393,7 @@ jobs:
       - win
       - win-arm64
       - linux
+      - linux-arm64
       - macos
     permissions:
       contents: write

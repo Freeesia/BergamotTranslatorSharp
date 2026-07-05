@@ -77,10 +77,15 @@ elseif(APPLE)
     ARCHIVE DESTINATION lib/macos COMPONENT bergamot_translator_dynamic
   )
 else() # Linux その他のUnix系
+  set(BERGAMOT_LINUX_INSTALL_DIR "linux")
+  if(BERGAMOT_TARGET_ARM64)
+    set(BERGAMOT_LINUX_INSTALL_DIR "linux-arm64")
+  endif()
+
   install(TARGETS bergamot_translator_dynamic
-    LIBRARY DESTINATION lib/linux COMPONENT bergamot_translator_dynamic
-    RUNTIME DESTINATION bin/linux COMPONENT bergamot_translator_dynamic
-    ARCHIVE DESTINATION lib/linux COMPONENT bergamot_translator_dynamic
+    LIBRARY DESTINATION lib/${BERGAMOT_LINUX_INSTALL_DIR} COMPONENT bergamot_translator_dynamic
+    RUNTIME DESTINATION bin/${BERGAMOT_LINUX_INSTALL_DIR} COMPONENT bergamot_translator_dynamic
+    ARCHIVE DESTINATION lib/${BERGAMOT_LINUX_INSTALL_DIR} COMPONENT bergamot_translator_dynamic
   )
 endif()
 
