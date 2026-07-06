@@ -9,8 +9,22 @@ on:
 
 jobs:
   win:
-    runs-on: windows-latest
-    name: Build Windows Native Lib
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: windows-latest
+            artifact: libs-win
+            build_dir: build
+            vcpkg_cache_prefix: vcpkg-windows-x64-content
+          - arch: arm64
+            runner: windows-11-arm
+            artifact: libs-win-arm64
+            build_dir: out/build/windows-arm64-clangcl-release
+            vcpkg_cache_prefix: vcpkg-windows-arm64
+    runs-on: ${{ matrix.runner }}
+    name: Build Windows ${{ matrix.arch }} Native Lib
     env:
       CCACHE_BASEDIR: "${{ github.workspace }}"
       CCACHE_DIR: "${{ github.workspace }}\\ccache"
@@ -18,94 +32,7 @@ jobs:
       CCACHE_COMPRESS: "true"
       CCACHE_COMPRESSLEVEL: 9
       CCACHE_MAXSIZE: 200M
-      ccache_version: "4.5"
-      VCPKG_DEFAULT_BINARY_CACHE: "${{ github.workspace }}\\vcpkg\\"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Download ccache
-        shell: cmake -P {0}
-        run: |
-          set(ccache_url "https://github.com/cristianadam/ccache/releases/download/v${{ env.ccache_version }}/${{ runner.os }}.tar.xz")
-          file(DOWNLOAD "${ccache_url}" ./ccache.tar.xz SHOW_PROGRESS)
-          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ccache.tar.xz)
-          if(ret AND NOT ret EQUAL 0)
-            message( FATAL_ERROR "Bad exit status")
-          endif()
-
-      - name: Generate ccache_vars for ccache based on machine
-        shell: cmake -P {0}
-        id: ccache_vars
-        run: |-
-          string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
-          message("::set-output name=timestamp::${current_date}")
-          message("::set-output name=hash::${{ env.ccache_compilercheck }}")
-
-      - name: Cache-op for build-cache through ccache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-windows-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
-          restore-keys: |-
-            ccache-windows-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
-            ccache-windows-x64-${{ steps.ccache_vars.outputs.hash }}
-            ccache-windows-x64
-
-      - name: Cache-op for build-cache through vcpkg
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-          key: vcpkg-windows-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
-          restore-keys: |-
-            vcpkg-windows-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
-            vcpkg-windows-x64-${{ steps.ccache_vars.outputs.hash }}
-            vcpkg-windows-x64
-
-      - name: ccache prolog
-        run: |-
-          ${{github.workspace}}\ccache.exe -sv # Print current cache stats
-          ${{github.workspace}}\ccache.exe -z # Print current cache stats
-          New-Item -ItemType Directory -Force -Path "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}" | Out-Null
-
-      - name: Create Build Environment
-        # Some projects don't allow in-source building, so create a separate build directory
-        # We'll use this as our working directory for all subsequent commands
-        run: cmake -E make_directory ${{github.workspace}}/build
-
-      - name: Configure
-        working-directory: ${{github.workspace}}/build #@TODO figure out how variables are accessed from power shell, as they seem to not be read.
-        run: |
-          cmake .. -DBUILD_ARCH=corei7-avx -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=ON '-DCMAKE_POLICY_VERSION_MINIMUM=3.5' -DVCPKG_TARGET_TRIPLET='x64-windows-static' `
-                -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"  `
-                -DCMAKE_CXX_COMPILER_LAUNCHER=${{github.workspace}}\ccache.exe `
-                -DCMAKE_C_COMPILER_LAUNCHER=${{github.workspace}}\ccache.exe
-        shell: powershell
-
-      - name: Build
-        working-directory: ${{github.workspace}}/build
-        run: cmake --build . --config Release -j3 --target bergamot_translator_dynamic
-        shell: powershell
-
-      - name: Install
-        working-directory: ${{github.workspace}}/build
-        run: cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
-        shell: powershell
-
-      - name: ccache epilog
-        run: |-
-          ${{github.workspace}}\\ccache.exe -sv # Print current cache stats
-      - uses: actions/upload-artifact@v4
-        with:
-          name: libs-win
-          path: libs/*
-
-  win-arm64:
-    runs-on: windows-11-arm
-    name: Build Windows ARM64 Native Lib
-    env:
+      CCACHE_VERSION: "4.5"
       VCPKG_DEFAULT_BINARY_CACHE: "${{ github.workspace }}\\vcpkg\\"
       VCPKG_ROOT: C:\vcpkg
     steps:
@@ -114,29 +41,65 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Download ccache
+        if: ${{ matrix.arch == 'x64' }}
+        shell: cmake -P {0}
+        run: |
+          set(ccache_url "https://github.com/cristianadam/ccache/releases/download/v${{ env.CCACHE_VERSION }}/${{ runner.os }}.tar.xz")
+          file(DOWNLOAD "${ccache_url}" ./ccache.tar.xz SHOW_PROGRESS)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ccache.tar.xz)
+          if(ret AND NOT ret EQUAL 0)
+            message( FATAL_ERROR "Bad exit status")
+          endif()
+
       - name: Generate cache key
         id: cache_vars
         shell: powershell
         run: |
           "timestamp=$(Get-Date -Format 'yyyy-MM-ddTHH.mm.ss')" >> $env:GITHUB_OUTPUT
 
+      - name: Cache-op for build-cache through ccache
+        if: ${{ matrix.arch == 'x64' }}
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-windows-x64-${{ env.CCACHE_COMPILERCHECK }}-${{ github.ref }}-${{ steps.cache_vars.outputs.timestamp }}
+          restore-keys: |-
+            ccache-windows-x64-${{ env.CCACHE_COMPILERCHECK }}-${{ github.ref }}
+            ccache-windows-x64-${{ env.CCACHE_COMPILERCHECK }}
+            ccache-windows-x64
+
       - name: Cache-op for build-cache through vcpkg
         uses: actions/cache@v4
         with:
           path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-          key: vcpkg-windows-arm64-${{ github.ref }}-${{ steps.cache_vars.outputs.timestamp }}
+          key: ${{ matrix.vcpkg_cache_prefix }}-${{ github.ref }}-${{ steps.cache_vars.outputs.timestamp }}
           restore-keys: |-
-            vcpkg-windows-arm64-${{ github.ref }}
-            vcpkg-windows-arm64
+            ${{ matrix.vcpkg_cache_prefix }}-${{ github.ref }}
+            ${{ matrix.vcpkg_cache_prefix }}
 
       - name: Create vcpkg cache directory
         shell: powershell
         run: |
-          if (!(Test-Path "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}")) {
-            New-Item -ItemType Directory -Path "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}" | Out-Null
-          }
+          New-Item -ItemType Directory -Force -Path "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}" | Out-Null
+
+      - name: ccache prolog
+        if: ${{ matrix.arch == 'x64' }}
+        run: |-
+          ${{github.workspace}}\ccache.exe -sv # Print current cache stats
+          ${{github.workspace}}\ccache.exe -z # Print current cache stats
+
+      - name: Configure x64
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          cmake -S . -B build -DBUILD_ARCH=corei7-avx -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=ON '-DCMAKE_POLICY_VERSION_MINIMUM=3.5' -DVCPKG_TARGET_TRIPLET='x64-windows-static' `
+                -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"  `
+                -DCMAKE_CXX_COMPILER_LAUNCHER=${{github.workspace}}\ccache.exe `
+                -DCMAKE_C_COMPILER_LAUNCHER=${{github.workspace}}\ccache.exe
+        shell: powershell
 
       - name: Add Visual Studio tools to PATH
+        if: ${{ matrix.arch == 'arm64' }}
         shell: powershell
         run: |
           $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
@@ -154,21 +117,27 @@ jobs:
           & $ninja --version
           & $clangCl --version
 
-      - name: Configure
+      - name: Configure ARM64
+        if: ${{ matrix.arch == 'arm64' }}
         run: cmake --preset windows-arm64-clangcl-release
         shell: powershell
 
       - name: Build
-        run: cmake --build --preset windows-arm64-clangcl-release -j3
+        run: cmake --build ${{ matrix.build_dir }} --config Release -j3 --target bergamot_translator_dynamic
         shell: powershell
 
       - name: Install
-        run: cmake --install out/build/windows-arm64-clangcl-release --prefix libs --component bergamot_translator_dynamic
+        run: cmake --install ${{ matrix.build_dir }} --prefix libs --component bergamot_translator_dynamic
         shell: powershell
+
+      - name: ccache epilog
+        if: ${{ matrix.arch == 'x64' }}
+        run: |-
+          ${{github.workspace}}\\ccache.exe -sv # Print current cache stats
 
       - uses: actions/upload-artifact@v4
         with:
-          name: libs-win-arm64
+          name: ${{ matrix.artifact }}
           path: libs/*
 
   linux:
@@ -319,7 +288,6 @@ jobs:
     name: Build .NET Lib
     needs:
       - win
-      - win-arm64
       - linux
       - macos
     permissions:
