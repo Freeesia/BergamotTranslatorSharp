@@ -1,9 +1,10 @@
 #include "bergamot.h"
+#include <cstdlib>
 #include <iostream>
 #include <string>
-#include <fstream>
-#include <sstream>
+#ifdef _WIN32
 #include <combaseapi.h>
+#endif
 
 int main(int argc, char *argv[]) {
   if (argc < 3) {
@@ -29,16 +30,20 @@ int main(int argc, char *argv[]) {
   std::string input = argv[2];
 
   // 翻訳を実行
-  char* translatedText = translator_translate(translator, input.c_str());
+  char* translatedText = translator_translate(translator, input.c_str(), false);
   if (translatedText) {
     // 翻訳結果を出力
     std::cout << translatedText;
     
-    // translatedTextのメモリを解放
-    // 注: ここでfree()を使わず、実装に合わせた解放方法を使用する必要があるかもしれません
-    CoTaskMemFree(translatedText);  // WindowsのCoTaskMemAllocを使用していると仮定
+    // translator_translate と同じアロケーターでメモリを解放
+#ifdef _WIN32
+    CoTaskMemFree(translatedText);
+#else
+    std::free(translatedText);
+#endif
   } else {
     std::cout << "Translation failed";
+    translator_free(translator);
     return 3;
   }
 
