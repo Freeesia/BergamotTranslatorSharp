@@ -6,8 +6,6 @@
 #include "translator/translation_model.h"
 #ifdef _WIN32
 #include <combaseapi.h>
-#else
-#include <gperftools/tcmalloc.h>
 #endif
 
 using marian::bergamot::BlockingService;

@@ -190,7 +190,7 @@ jobs:
       - name: Install Dependencies
         run: |-
           sudo apt-get update
-          sudo apt-get install -y libprotobuf-dev protobuf-compiler libboost-all-dev ccache libunwind-dev libgoogle-perftools-dev
+          sudo apt-get install -y libprotobuf-dev protobuf-compiler libboost-all-dev ccache libunwind-dev
       - name: Install MKL
         run: |-
           wget -qO- "https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB" | sudo apt-key add -
@@ -235,6 +235,12 @@ jobs:
       - name: Install
         working-directory: build
         run: cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
+      - name: Verify static tcmalloc linkage
+        run: |-
+          if readelf -d libs/lib/linux/libbergamot.so | grep -q 'libtcmalloc'; then
+            echo 'libbergamot.so still has a shared tcmalloc dependency' >&2
+            exit 1
+          fi
       - name: ccache epilog
         run: 'ccache -s # Print current cache stats'
       - uses: actions/upload-artifact@v4
@@ -261,7 +267,7 @@ jobs:
       - name: Install Dependencies
         run: |-
           sudo apt-get update
-          sudo apt-get install -y libprotobuf-dev protobuf-compiler libboost-all-dev ccache ninja-build libunwind-dev libgoogle-perftools-dev
+          sudo apt-get install -y libprotobuf-dev protobuf-compiler libboost-all-dev ccache ninja-build libunwind-dev
       - name: Generate ccache_vars for ccache based on machine
         shell: bash
         id: ccache_vars
@@ -307,6 +313,10 @@ jobs:
         run: |-
           test -f libs/lib/linux-arm64/libbergamot.so
           file libs/lib/linux-arm64/libbergamot.so | grep -q 'ARM aarch64'
+          if readelf -d libs/lib/linux-arm64/libbergamot.so | grep -q 'libtcmalloc'; then
+            echo 'libbergamot.so still has a shared tcmalloc dependency' >&2
+            exit 1
+          fi
       - name: ccache epilog
         run: ccache -s
       - uses: actions/upload-artifact@v4
