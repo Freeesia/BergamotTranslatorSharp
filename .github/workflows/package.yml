@@ -141,8 +141,20 @@ jobs:
           path: libs/*
 
   linux:
-    runs-on: ubuntu-latest
-    name: Build Linux Native Lib
+    runs-on: ${{ matrix.runner }}
+    name: Build Linux ${{ matrix.arch }} Native Lib
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+            use_mkl: true
+            artifact: libs-linux-x64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            use_mkl: false
+            artifact: libs-linux-arm64
     env:
       ccache_basedir: ${{ github.workspace }}
       ccache_dir: "${{ github.workspace }}/.ccache"
@@ -159,8 +171,9 @@ jobs:
       - name: Install Dependencies
         run: |-
           sudo apt-get update
-          sudo apt-get install -y libprotobuf-dev protobuf-compiler libboost-all-dev ccache libunwind-dev libgoogle-perftools-dev
+          sudo apt-get install -y libprotobuf-dev protobuf-compiler libboost-all-dev ccache ninja-build libunwind-dev
       - name: Install MKL
+        if: matrix.use_mkl
         run: |-
           wget -qO- "https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB" | sudo apt-key add -
           sudo sh -c "echo deb https://apt.repos.intel.com/mkl all main > /etc/apt/sources.list.d/intel-mkl.list"
@@ -176,11 +189,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.ccache_dir }}
-          key: ccache-linux-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
+          key: ccache-linux-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
           restore-keys: |-
-            ccache-linux-x64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
-            ccache-linux-x64-${{ steps.ccache_vars.outputs.hash }}
-            ccache-linux-x64
+            ccache-linux-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
+            ccache-linux-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}
+            ccache-linux-${{ matrix.arch }}
       - name: ccache environment setup
         run: |-
           echo "CCACHE_COMPILER_CHECK=${{ env.ccache_compilercheck }}" >> $GITHUB_ENV
@@ -193,22 +206,25 @@ jobs:
         run: |-
           ccache -s # Print current cache stats
           ccache -z # Zero cache entry
-      - name: cmake
+      - name: Configure
         run: |-
-          mkdir -p build
-          cd build
-          cmake -L .. ${{ env.ccache_cmake }} -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=ON
-      - name: Build from source
-        working-directory: build
-        run: cmake --build . --config Release -j3 --target bergamot_translator_dynamic
+          cmake -S . -B build -G Ninja \
+            ${{ env.ccache_cmake }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DUSE_STATIC_LIBS=ON \
+            -DUSE_MKL=${{ matrix.use_mkl }} \
+            -DBUILD_ARCH=native \
+            -DSSPLIT_USE_INTERNAL_PCRE2=ON \
+            -DGIT_SUBMODULE=OFF
+      - name: Build
+        run: cmake --build build --config Release -j3 --target bergamot_translator_dynamic
       - name: Install
-        working-directory: build
-        run: cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
+        run: cmake --install build --prefix libs --component bergamot_translator_dynamic
       - name: ccache epilog
         run: 'ccache -s # Print current cache stats'
       - uses: actions/upload-artifact@v4
         with:
-          name: libs-linux
+          name: ${{ matrix.artifact }}
           path: libs/*
 
   macos:

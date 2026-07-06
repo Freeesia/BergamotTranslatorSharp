@@ -22,6 +22,11 @@
       <PackagePath>runtimes\linux-x64\native</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\libs\lib\linux-arm64\libbergamot.so" Condition="Exists('..\libs\lib\linux-arm64\libbergamot.so')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes\linux-arm64\native</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\libs\lib\macos\libbergamot.dylib" Condition="Exists('..\libs\lib\macos\libbergamot.dylib')">
       <Pack>true</Pack>
       <PackagePath>runtimes/osx-arm64/native</PackagePath>
