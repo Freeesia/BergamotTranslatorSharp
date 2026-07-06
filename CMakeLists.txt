@@ -164,10 +164,8 @@ endif(MSVC)
 
 # The P/Invoke shared library embeds its own PIC build of tcmalloc. Avoid
 # pulling a second, distribution-provided archive into Marian or SentencePiece.
-if(UNIX AND NOT APPLE)
-  set(CMAKE_DISABLE_FIND_PACKAGE_Tcmalloc TRUE)
-  set(SPM_ENABLE_TCMALLOC OFF CACHE BOOL "Disable the system tcmalloc archive" FORCE)
-endif()
+set(CMAKE_DISABLE_FIND_PACKAGE_Tcmalloc TRUE)
+set(SPM_ENABLE_TCMALLOC OFF CACHE BOOL "Disable the system tcmalloc archive" FORCE)
 
 add_subdirectory(bergamot-translator)
 bergamot_configure_windows_arm64_target(marian)
