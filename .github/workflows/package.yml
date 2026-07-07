@@ -307,6 +307,7 @@ jobs:
       - macos
     permissions:
       contents: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -334,8 +335,15 @@ jobs:
         with:
           name: nupkg
           path: pack/*
-      - if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
-        run: dotnet nuget push pack/*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: NuGet login
+        if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
+        id: nuget_login
+        uses: NuGet/login@v1
+        with:
+          user: Freesia
+      - name: NuGet push
+        if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
+        run: dotnet nuget push pack/*.nupkg --api-key ${{ steps.nuget_login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
       - if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
         uses: softprops/action-gh-release@v2
         with:
