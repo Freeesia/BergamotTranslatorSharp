@@ -1,4 +1,4 @@
-name: Package
+Name: Package
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
         include:
           - arch: x64
             runner: windows-latest
-            artifact: libs-win
+            artifact: libs-win-x64
             build_dir: build
             vcpkg_cache_prefix: vcpkg-windows-x64-content
             ccache_cache_prefix: ccache-windows-x64
@@ -26,6 +26,19 @@ jobs:
               -DUSE_STATIC_LIBS=ON
               '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
               -DVCPKG_TARGET_TRIPLET=x64-windows-static
+              -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+          - arch: x86
+            runner: windows-latest
+            artifact: libs-win-x86
+            build_dir: build
+            vcpkg_cache_prefix: vcpkg-windows-x86-content
+            ccache_cache_prefix: ccache-windows-x86
+            configure_args: >-
+              -S . -B build -A Win32
+              -DCMAKE_BUILD_TYPE=Release
+              -DUSE_STATIC_LIBS=ON
+              '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
+              -DVCPKG_TARGET_TRIPLET=x86-windows-static
               -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
           - arch: arm64
             runner: windows-11-arm
@@ -227,8 +240,18 @@ jobs:
           path: libs/*
 
   macos:
-    runs-on: macos-latest
-    name: Build macOS Native Lib
+    runs-on: ${{ matrix.runner }}
+    name: Build macOS ${{ matrix.arch }} Native Lib
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-latest
+            artifact: libs-macos-arm64
+          - arch: x64
+            runner: macos-13
+            artifact: libs-macos-x64
     env:
       ccache_basedir: ${{ github.workspace }}
       ccache_dir: "${{ github.workspace }}/.ccache"
@@ -255,11 +278,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.ccache_dir }}
-          key: ccache-macos-arm64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
+          key: ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
           restore-keys: |-
-            ccache-macos-arm64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
-            ccache-macos-arm64-${{ steps.ccache_vars.outputs.hash }}
-            ccache-macos-arm64
+            ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
+            ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}
+            ccache-macos-${{ matrix.arch }}
       - name: ccache environment setup
         run: |-
           echo "CCACHE_COMPILER_CHECK=${{ env.ccache_compilercheck }}" >> $GITHUB_ENV
@@ -296,8 +319,9 @@ jobs:
         run: 'ccache -s # Print current cache stats'
       - uses: actions/upload-artifact@v4
         with:
-          name: libs-macos-arm64
+          name: ${{ matrix.artifact }}
           path: libs/*
+
   dotnet:
     runs-on: ubuntu-latest
     name: Build .NET Lib
