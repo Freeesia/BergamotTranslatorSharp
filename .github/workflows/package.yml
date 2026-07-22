@@ -54,8 +54,9 @@ jobs:
               -DCOMPILE_AVX=OFF
               -DCOMPILE_AVX2=OFF
               -DCOMPILE_AVX512=OFF
-              -DCMAKE_CXX_FLAGS="/arch:SSE2 /WX- /permissive- /EHsc /bigobj /UUSE_INTGEMM"
-              -DCMAKE_C_FLAGS="/arch:SSE2 /WX- /UUSE_INTGEMM"
+              -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF
+              -DCMAKE_CXX_FLAGS="/arch:SSE2 /WX- /wd4018 /wd4319 /wd4244 /wd4267 /permissive- /EHsc /bigobj /UUSE_INTGEMM"
+              -DCMAKE_C_FLAGS="/arch:SSE2 /WX- /wd4018 /wd4319 /wd4244 /wd4267 /UUSE_INTGEMM"
           - arch: arm64
             runner: windows-11-arm
             artifact: libs-win-arm64
