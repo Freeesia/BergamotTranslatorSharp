@@ -132,24 +132,17 @@ jobs:
           & $ninja --version
           & $clangCl --version
 
-      # Fix für 32-Bit MSVC: Inline __popcnt64 Implementierung injizieren
+      # Fix für 32-Bit MSVC: Sauberes Macro-Patching ohne PowerShell-Syntaxfehler
       - name: Patch Faiss for x86 32-bit builds
         if: ${{ matrix.arch == 'x86' }}
         shell: powershell
         run: |
           $file = "bergamot-translator/3rd_party/marian-dev/src/3rd_party/faiss/utils/hamming.h"
           if (Test-Path $file) {
-            $code = @"
-          #if defined(_MSC_VER) && !defined(_M_X64) && !defined(_M_ARM64)
-          #include <intrin.h>
-          inline unsigned int __popcnt64(unsigned __int64 val) {
-              return __popcnt((unsigned int)val) + __popcnt((unsigned int)(val >> 32));
-          }
-          #endif
-          "@
-            $content = Get-Content $file -Raw
-            Set-Content $file ($code + "`n" + $content)
-            Write-Host "Successfully prepended __popcnt64 workaround to hamming.h"
+            $patch = "#if defined(_MSC_VER) && !defined(_M_X64) && !defined(_M_ARM64)`n#include <intrin.h>`n#define __popcnt64(x) (__popcnt((unsigned int)(x)) + __popcnt((unsigned int)((x) >> 32)))`n#endif`n"
+            $content = [System.IO.File]::ReadAllText($file)
+            [System.IO.File]::WriteAllText($file, $patch + $content)
+            Write-Host "Successfully prepended __popcnt64 macro to hamming.h"
           }
 
       - name: Configure
