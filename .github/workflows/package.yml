@@ -28,35 +28,6 @@ jobs:
               '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
               -DVCPKG_TARGET_TRIPLET=x64-windows-static
               -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
-          - arch: x86
-            runner: windows-latest
-            artifact: libs-win-x86
-            build_dir: build
-            vcpkg_cache_prefix: vcpkg-windows-x86-content
-            ccache_cache_prefix: ccache-windows-x86
-            configure_args: >-
-              -S . -B build -A Win32
-              -DCMAKE_BUILD_TYPE=Release
-              -DUSE_STATIC_LIBS=ON
-              '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
-              -DVCPKG_TARGET_TRIPLET=x86-windows-static
-              -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
-              -DBUILD_ARCH=generic
-              -DUSE_INTGEMM=OFF
-              -DUSE_RUY_SGEMM=OFF
-              -DCOMPILE_CUDA=OFF
-              -DCOMPILE_SERVER=OFF
-              -DCOMPILE_TESTS=OFF
-              -DCOMPILE_SSE2=OFF
-              -DCOMPILE_SSE3=OFF
-              -DCOMPILE_SSE4_1=OFF
-              -DCOMPILE_SSE4_2=OFF
-              -DCOMPILE_AVX=OFF
-              -DCOMPILE_AVX2=OFF
-              -DCOMPILE_AVX512=OFF
-              -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF
-              -DCMAKE_CXX_FLAGS="/arch:SSE2 /WX- /wd4018 /wd4319 /wd4244 /wd4267 /wd4389 /permissive- /EHsc /bigobj /UUSE_INTGEMM"
-              -DCMAKE_C_FLAGS="/arch:SSE2 /WX- /wd4018 /wd4319 /wd4244 /wd4267 /wd4389 /UUSE_INTGEMM"
           - arch: arm64
             runner: windows-11-arm
             artifact: libs-win-arm64
@@ -142,58 +113,9 @@ jobs:
           Split-Path -Parent $ninja | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           Split-Path -Parent $clangCl | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Disable /WX in all CMake files
-        shell: powershell
-        run: |
-          Get-ChildItem -Path "." -Filter "CMakeLists.txt" -Recurse | ForEach-Object {
-            $content = [System.IO.File]::ReadAllText($_.FullName)
-            if ($content -match '/WX') {
-              $content = $content -replace '/WX', '/WX-'
-              [System.IO.File]::WriteAllText($_.FullName, $content)
-              Write-Host "Patched /WX in $($_.FullName)"
-            }
-          }
-
-      - name: Patch Faiss for x86 32-bit builds
-        if: ${{ matrix.arch == 'x86' }}
-        shell: powershell
-        run: |
-          $file = "bergamot-translator/3rd_party/marian-dev/src/3rd_party/faiss/utils/hamming.h"
-          if (Test-Path $file) {
-            $patch = "#if defined(_MSC_VER) && !defined(_M_X64) && !defined(_M_ARM64)`n#include <intrin.h>`n#ifndef __popcnt64`n#define __popcnt64(x) (__popcnt((unsigned int)(x)) + __popcnt((unsigned int)((x) >> 32)))`n#endif`n#ifndef _mm_popcnt_u64`n#define _mm_popcnt_u64(x) (__popcnt((unsigned int)(x)) + __popcnt((unsigned int)((x) >> 32)))`n#endif`n#endif`n"
-            $content = [System.IO.File]::ReadAllText($file)
-            [System.IO.File]::WriteAllText($file, $patch + $content)
-            Write-Host "Popcnt Macro in hamming.h gepatcht!"
-          }
-
-      - name: Patch Marian definitions.h for x86 32-bit builds
-        if: ${{ matrix.arch == 'x86' }}
-        shell: powershell
-        run: |
-          $file = "bergamot-translator/3rd_party/marian-dev/src/common/definitions.h"
-          if (Test-Path $file) {
-            $content = [System.IO.File]::ReadAllText($file)
-            $patch = "`n#if defined(_MSC_VER) && !defined(_M_X64) && !defined(_M_ARM64)`n#undef USE_INTGEMM`n#endif`n"
-            [System.IO.File]::WriteAllText($file, $content + $patch)
-            Write-Host "definitions.h erfolgreich gepatcht!"
-          }
-
       - name: Configure
         run: cmake ${{ matrix.configure_args }} ${{ env.CCACHE_CMAKE_ARGS }}
         shell: powershell
-
-      - name: Disable TreatWarningsAsErrors in MSBuild projects
-        shell: powershell
-        run: |
-          if (Test-Path "${{ matrix.build_dir }}") {
-            Get-ChildItem -Path "${{ matrix.build_dir }}" -Filter "*.vcxproj" -Recurse | ForEach-Object {
-              $content = [System.IO.File]::ReadAllText($_.FullName)
-              $content = $content -replace '<TreatWarningAsError>true</TreatWarningAsError>', '<TreatWarningAsError>false</TreatWarningAsError>'
-              $content = $content -replace '/WX', '/WX-'
-              [System.IO.File]::WriteAllText($_.FullName, $content)
-            }
-            Write-Host "TreatWarningAsError in vcxproj-Dateien erfolgreich deaktiviert!"
-          }
 
       - name: Build
         run: cmake --build ${{ matrix.build_dir }} --config Release -j3 --target bergamot_translator_dynamic
@@ -338,7 +260,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.ccache_dir }}
-          key: ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
+          key: ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.cache_vars.outputs.timestamp }}
           restore-keys: |-
             ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
             ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}
