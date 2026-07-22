@@ -56,7 +56,6 @@ jobs:
               -DCOMPILE_AVX512=OFF
               -DCMAKE_CXX_FLAGS="/arch:SSE2 /WX- /permissive- /EHsc /bigobj"
               -DCMAKE_C_FLAGS="/arch:SSE2 /WX-"
-
           - arch: arm64
             runner: windows-11-arm
             artifact: libs-win-arm64
@@ -152,6 +151,19 @@ jobs:
             $content = [System.IO.File]::ReadAllText($file)
             [System.IO.File]::WriteAllText($file, $patch + $content)
             Write-Host "Popcnt Macro in hamming.h gepatcht!"
+          }
+
+      - name: Patch Marian io_item.h for x86 32-bit builds
+        if: ${{ matrix.arch == 'x86' }}
+        shell: powershell
+        run: |
+          $file = "bergamot-translator/3rd_party/marian-dev/src/common/io_item.h"
+          if (Test-Path $file) {
+            $content = [System.IO.File]::ReadAllText($file)
+            $patch = "#if defined(_MSC_VER) && !defined(_M_X64) && !defined(_M_ARM64)`n#undef USE_INTGEMM`n#define USE_INTGEMM 0`n#endif`n"
+            $content = $patch + $content
+            [System.IO.File]::WriteAllText($file, $content)
+            Write-Host "io_item.h erfolgreich fuer x86 gepatcht!"
           }
 
       - name: Configure
