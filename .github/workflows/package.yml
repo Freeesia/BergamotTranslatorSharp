@@ -41,6 +41,8 @@ jobs:
               '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
               -DVCPKG_TARGET_TRIPLET=x86-windows-static
               -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+              -DCMAKE_CXX_FLAGS="/arch:SSE2 /WX- /permissive- /EHsc"
+              -DCMAKE_C_FLAGS="/arch:SSE2 /WX-"
           - arch: arm64
             runner: windows-11-arm
             artifact: libs-win-arm64
@@ -132,17 +134,17 @@ jobs:
           & $ninja --version
           & $clangCl --version
 
-      # Fix für 32-Bit MSVC: Sauberes Macro-Patching ohne PowerShell-Syntaxfehler
+      # Pre-patching von 64-Bit Popcount Intrinsics in Faiss für 32-Bit MSVC Builds
       - name: Patch Faiss for x86 32-bit builds
         if: ${{ matrix.arch == 'x86' }}
         shell: powershell
         run: |
           $file = "bergamot-translator/3rd_party/marian-dev/src/3rd_party/faiss/utils/hamming.h"
           if (Test-Path $file) {
-            $patch = "#if defined(_MSC_VER) && !defined(_M_X64) && !defined(_M_ARM64)`n#include <intrin.h>`n#define __popcnt64(x) (__popcnt((unsigned int)(x)) + __popcnt((unsigned int)((x) >> 32)))`n#endif`n"
+            $patch = "#if defined(_MSC_VER) && !defined(_M_X64) && !defined(_M_ARM64)`n#include <intrin.h>`n#ifndef __popcnt64`n#define __popcnt64(x) (__popcnt((unsigned int)(x)) + __popcnt((unsigned int)((x) >> 32)))`n#endif`n#ifndef _mm_popcnt_u64`n#define _mm_popcnt_u64(x) (__popcnt((unsigned int)(x)) + __popcnt((unsigned int)((x) >> 32)))`n#endif`n#endif`n"
             $content = [System.IO.File]::ReadAllText($file)
             [System.IO.File]::WriteAllText($file, $patch + $content)
-            Write-Host "Successfully prepended __popcnt64 macro to hamming.h"
+            Write-Host "Successfully prepended 32-bit popcnt macros to hamming.h"
           }
 
       - name: Configure
