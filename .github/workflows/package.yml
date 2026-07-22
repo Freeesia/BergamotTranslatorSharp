@@ -43,7 +43,7 @@ jobs:
               -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
               -DBUILD_ARCH=generic
               -DUSE_INTGEMM=OFF
-              -DUSE_RUY_SGEMM=ON
+              -DUSE_RUY_SGEMM=OFF
               -DCOMPILE_CUDA=OFF
               -DCOMPILE_SERVER=OFF
               -DCOMPILE_TESTS=OFF
@@ -54,8 +54,9 @@ jobs:
               -DCOMPILE_AVX=OFF
               -DCOMPILE_AVX2=OFF
               -DCOMPILE_AVX512=OFF
-              -DCMAKE_CXX_FLAGS="/WX- /permissive- /EHsc /bigobj"
-              -DCMAKE_C_FLAGS="/WX-"
+              -DCMAKE_CXX_FLAGS="/arch:SSE2 /WX- /permissive- /EHsc /bigobj"
+              -DCMAKE_C_FLAGS="/arch:SSE2 /WX-"
+
           - arch: arm64
             runner: windows-11-arm
             artifact: libs-win-arm64
