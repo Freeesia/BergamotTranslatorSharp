@@ -260,7 +260,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.ccache_dir }}
-          key: ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.cache_vars.outputs.timestamp }}
+          key: ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
           restore-keys: |-
             ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
             ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}
@@ -345,7 +345,7 @@ jobs:
 
       - name: Push to GitHub Packages
         run: |
-          dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text-config --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+          dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
           dotnet nuget push pack/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source github --skip-duplicate
 
       - name: NuGet login
