@@ -227,8 +227,18 @@ jobs:
           path: libs/*
 
   macos:
-    runs-on: macos-latest
-    name: Build macOS Native Lib
+    runs-on: ${{ matrix.runner }}
+    name: Build macOS ${{ matrix.arch }} Native Lib
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-latest
+            artifact: libs-macos-arm64
+          - arch: x64
+            runner: macos-15-intel
+            artifact: libs-macos-x64
     env:
       ccache_basedir: ${{ github.workspace }}
       ccache_dir: "${{ github.workspace }}/.ccache"
@@ -255,11 +265,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.ccache_dir }}
-          key: ccache-macos-arm64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
+          key: ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}-${{ steps.ccache_vars.outputs.timestamp }}
           restore-keys: |-
-            ccache-macos-arm64-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
-            ccache-macos-arm64-${{ steps.ccache_vars.outputs.hash }}
-            ccache-macos-arm64
+            ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}-${{ github.ref }}
+            ccache-macos-${{ matrix.arch }}-${{ steps.ccache_vars.outputs.hash }}
+            ccache-macos-${{ matrix.arch }}
       - name: ccache environment setup
         run: |-
           echo "CCACHE_COMPILER_CHECK=${{ env.ccache_compilercheck }}" >> $GITHUB_ENV
@@ -291,13 +301,14 @@ jobs:
         run: cmake --build . --config Release -j3 --target bergamot_translator_dynamic
       - name: Install
         working-directory: build
-        run: cmake --install . --prefix "../libs" --component bergamot_translator_dynamic
+        run: cmake --install . --prefix "../libs/${{ matrix.arch }}" --component bergamot_translator_dynamic
       - name: ccache epilog
         run: 'ccache -s # Print current cache stats'
       - uses: actions/upload-artifact@v4
         with:
-          name: libs-macos-arm64
+          name: ${{ matrix.artifact }}
           path: libs/*
+
   dotnet:
     runs-on: ubuntu-latest
     name: Build .NET Lib
