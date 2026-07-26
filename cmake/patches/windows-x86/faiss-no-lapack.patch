@@ -1,0 +1,39 @@
+diff --git a/src/3rd_party/faiss/VectorTransform.cpp b/src/3rd_party/faiss/VectorTransform.cpp
+--- a/src/3rd_party/faiss/VectorTransform.cpp
++++ b/src/3rd_party/faiss/VectorTransform.cpp
+@@ -92,0 +93,23 @@ void matrix_qr(int m, int n, float *a)
++#if defined(_MSC_VER) && defined(_M_IX86)
++  // vcpkg's MSVC OpenBLAS build provides CBLAS but not the Fortran LAPACK
++  // entry points used below. Modified Gram-Schmidt is sufficient for the
++  // random rotation matrices needed by Marian and keeps this x86 build
++  // independent of those missing entry points.
++  for (int column = 0; column < n; ++column) {
++    for (int previous = 0; previous < column; ++previous) {
++      float dot = 0.0f;
++      for (int row = 0; row < m; ++row)
++        dot += a[row + column * m] * a[row + previous * m];
++      for (int row = 0; row < m; ++row)
++        a[row + column * m] -= dot * a[row + previous * m];
++    }
++
++    float norm = 0.0f;
++    for (int row = 0; row < m; ++row)
++      norm += a[row + column * m] * a[row + column * m];
++    norm = std::sqrt(norm);
++    ABORT_UNLESS(norm > 1e-12f, "matrix columns are linearly independent");
++    for (int row = 0; row < m; ++row)
++      a[row + column * m] /= norm;
++  }
++#else
+@@ -107,0 +131 @@ void matrix_qr(int m, int n, float *a)
++#endif
+@@ -434,0 +459,7 @@ void eig(size_t d_in, double *cov, double *eigenvalues, int verbose)
++#if defined(_MSC_VER) && defined(_M_IX86)
++    (void)d_in;
++    (void)cov;
++    (void)eigenvalues;
++    (void)verbose;
++    ABORT("PCA initialization requires LAPACK, which is unavailable in the MSVC x86 OpenBLAS build");
++#else
+@@ -482,0 +514 @@ void eig(size_t d_in, double *cov, double *eigenvalues, int verbose)
++#endif

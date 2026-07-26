@@ -89,6 +89,8 @@ if(WIN32)
   set(BERGAMOT_WINDOWS_INSTALL_DIR "win")
   if(BERGAMOT_TARGET_ARM64)
     set(BERGAMOT_WINDOWS_INSTALL_DIR "win-arm64")
+  elseif(BERGAMOT_TARGET_X86)
+    set(BERGAMOT_WINDOWS_INSTALL_DIR "win-x86")
   endif()
 
   install(TARGETS bergamot_translator_dynamic

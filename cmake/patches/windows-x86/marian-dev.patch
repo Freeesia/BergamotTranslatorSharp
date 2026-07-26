@@ -1,0 +1,20 @@
+diff --git a/src/3rd_party/faiss/utils/hamming.h b/src/3rd_party/faiss/utils/hamming.h
+--- a/src/3rd_party/faiss/utils/hamming.h
++++ b/src/3rd_party/faiss/utils/hamming.h
+@@ -34 +34,3 @@
++#if !defined(_M_IX86)
+ #define __builtin_popcountl __popcnt64
++#endif
+@@ -119,2 +121,12 @@ static inline int popcount64(uint64_t x) {
++#if defined(_MSC_VER) && defined(_M_IX86)
++    // MSVC does not expose __popcnt64 when targeting x86. Use a portable
++    // parallel bit count so the x86 build keeps its SSE2 CPU baseline.
++    x -= (x >> 1) & UINT64_C(0x5555555555555555);
++    x = (x & UINT64_C(0x3333333333333333))
++        + ((x >> 2) & UINT64_C(0x3333333333333333));
++    x = (x + (x >> 4)) & UINT64_C(0x0F0F0F0F0F0F0F0F);
++    return (int)((x * UINT64_C(0x0101010101010101)) >> 56);
++#else
+     return __builtin_popcountl(x);
++#endif
+ }
