@@ -38,7 +38,7 @@ dotnet add package BergamotTranslatorSharp
 ### Requirements
 
 - .NET 8.0 or later
-- Windows x86, Windows x64, Windows ARM64, Linux x64, or macOS ARM64
+- Windows x86, Windows x64, Windows ARM64, Linux x64, macOS x64, or macOS ARM64
 
 ### Build the native library from source
 
@@ -64,18 +64,61 @@ cmake --install out\build\windows-arm64-clangcl-release --prefix libs --componen
 
 ### 1. Download models
 
-Download and extract models from [Firefox Translations models](https://github.com/mozilla/firefox-translations-models).
+The old `mozilla/firefox-translations-models` repository is no longer maintained. Models are now published through Mozilla's [official model registry](https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/db/models.json), with the model files hosted under the `baseUrl` in that registry.
+
+The following example requires `curl`, `jq`, and `gzip`. First, download the registry and inspect the available language directions:
 
 ```bash
-git clone --depth 1 --branch main --single-branch https://github.com/mozilla/firefox-translations-models/
-mkdir models
-cp -rf firefox-translations-models/registry.json models
-cp -rf firefox-translations-models/models/prod/* models
-cp -rf firefox-translations-models/models/dev/* models
-gunzip models/*/*
+REGISTRY_URL=https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/db/models.json
+curl --fail --location --output models.json "$REGISTRY_URL"
+jq -r '.models | keys[]' models.json
 ```
 
-After extraction, choose the model directory for the translation direction you want to use. For example, use a `deen` model directory for German to English, or an `enja` model directory for English to Japanese.
+Choose a direction and inspect its model candidates. Registry directions use a hyphen, such as `de-en` for German to English and `en-ja` for English to Japanese.
+
+```bash
+DIRECTION=en-ja
+jq --arg direction "$DIRECTION" \
+  '.models[$direction] | to_entries | map({
+    index: .key,
+    architecture: .value.architecture,
+    releaseStatus: .value.releaseStatus,
+    files: .value.files
+  })' models.json
+```
+
+Set `MODEL_INDEX` to the candidate selected from that output. The example below selects index `1`, the current `Release` candidate for `en-ja`, and stores it in `models/enja`. Change `DIRECTION`, `MODEL_INDEX`, and `MODEL_DIR` together when using another language direction or candidate.
+
+```bash
+DIRECTION=en-ja
+MODEL_INDEX=1
+MODEL_DIR=models/enja
+set -euo pipefail
+BASE_URL=$(jq -r '.baseUrl' models.json)
+
+mkdir -p "$MODEL_DIR"
+jq -r --arg direction "$DIRECTION" --argjson index "$MODEL_INDEX" '
+  .models[$direction][$index].files
+  | [
+      .model.path,
+      .vocab.path,
+      .srcVocab.path,
+      .trgVocab.path,
+      .lexicalShortlist.path
+    ]
+  | .[]
+  | select(type == "string")
+' models.json |
+while IFS= read -r path; do
+  curl --fail --location \
+    --output "$MODEL_DIR/$(basename "$path")" \
+    "$BASE_URL/$path"
+done
+
+gzip --decompress "$MODEL_DIR"/*.gz
+```
+
+This downloads the model, its single vocabulary or separate source and target vocabularies, and the lexical shortlist. After decompression, create the configuration file in `MODEL_DIR` and use the exact decompressed file names shown by `ls "$MODEL_DIR"`.
 
 ### 2. Create a configuration file
 
@@ -88,8 +131,8 @@ relative-paths: true
 models:
 - model.enja.intgemm.alphas.bin
 vocabs:
-- vocab.enja.spm
-- vocab.enja.spm
+- srcvocab.enja.spm
+- trgvocab.enja.spm
 shortlist:
 - lex.50.50.enja.s2t.bin
 - false

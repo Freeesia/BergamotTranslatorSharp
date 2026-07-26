@@ -1,5 +1,0 @@
-diff --git a/src/3rd_party/intgemm/intgemm/intgemm.cc b/src/3rd_party/intgemm/intgemm/intgemm.cc
---- a/src/3rd_party/intgemm/intgemm/intgemm.cc
-+++ b/src/3rd_party/intgemm/intgemm/intgemm.cc
-@@ -44,0 +45 @@ CPUType RealCPUID() {
-+  (void)ebx;

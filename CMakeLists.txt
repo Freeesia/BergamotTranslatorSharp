@@ -116,22 +116,10 @@ if(WIN32 AND BERGAMOT_TARGET_X86)
   # patch consumes through its vcpkg CMake target.
   set(USE_MKL OFF CACHE BOOL "Compile with MKL support" FORCE)
 
-  set(BERGAMOT_PATCH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/patches/windows-x86")
+  set(BERGAMOT_X86_PATCH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/patches/windows-x86")
   bergamot_apply_dependency_patch(
     "${CMAKE_CURRENT_SOURCE_DIR}/bergamot-translator/3rd_party/marian-dev"
-    "${BERGAMOT_PATCH_DIR}/marian-dev.patch")
-  bergamot_apply_dependency_patch(
-    "${CMAKE_CURRENT_SOURCE_DIR}/bergamot-translator/3rd_party/marian-dev"
-    "${BERGAMOT_PATCH_DIR}/marian-openblas-config.patch")
-  bergamot_apply_dependency_patch(
-    "${CMAKE_CURRENT_SOURCE_DIR}/bergamot-translator/3rd_party/marian-dev"
-    "${BERGAMOT_PATCH_DIR}/faiss-no-lapack.patch")
-  bergamot_apply_dependency_patch(
-    "${CMAKE_CURRENT_SOURCE_DIR}/bergamot-translator/3rd_party/marian-dev"
-    "${BERGAMOT_PATCH_DIR}/intgemm.patch")
-  bergamot_apply_dependency_patch(
-    "${CMAKE_CURRENT_SOURCE_DIR}/bergamot-translator/3rd_party/marian-dev"
-    "${BERGAMOT_PATCH_DIR}/intgemm-explicit-dispatch-type.patch")
+    "${BERGAMOT_X86_PATCH_DIR}/marian-dev.patch")
 endif()
 
 function(bergamot_configure_windows_arm64_target target_name)
