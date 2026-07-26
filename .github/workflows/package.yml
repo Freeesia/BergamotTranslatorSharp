@@ -349,7 +349,7 @@ jobs:
           versionSpec: "5.x"
       - id: gitversion
         uses: gittools/actions/gitversion/execute@v3.1.11
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: libs
           merge-multiple: true
