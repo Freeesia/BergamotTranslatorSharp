@@ -56,18 +56,61 @@ cmake --install out\build\windows-arm64-clangcl-release --prefix libs --componen
 
 ### 1. モデルをダウンロードする
 
-[Firefox Translations models](https://github.com/mozilla/firefox-translations-models) からモデルをダウンロードして展開します。
+従来の `mozilla/firefox-translations-models` リポジトリは保守を終了しています。現在、モデルは Mozilla の[公式モデルレジストリ](https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/db/models.json)で公開され、モデルファイルはレジストリ内の `baseUrl` 配下に配置されています。
+
+次の例では `curl`、`jq`、`gzip` を使用します。最初にレジストリをダウンロードし、利用できる翻訳方向を確認します。
 
 ```bash
-git clone --depth 1 --branch main --single-branch https://github.com/mozilla/firefox-translations-models/
-mkdir models
-cp -rf firefox-translations-models/registry.json models
-cp -rf firefox-translations-models/models/prod/* models
-cp -rf firefox-translations-models/models/dev/* models
-gunzip models/*/*
+REGISTRY_URL=https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/db/models.json
+curl --fail --location --output models.json "$REGISTRY_URL"
+jq -r '.models | keys[]' models.json
 ```
 
-展開後、使用したい翻訳方向のモデルディレクトリを選びます。たとえば、ドイツ語から英語に翻訳する場合は `deen`、英語から日本語に翻訳する場合は `enja` のモデルディレクトリを使用します。
+翻訳方向を選び、そのモデル候補を確認します。レジストリの翻訳方向には、ドイツ語から英語の `de-en`、英語から日本語の `en-ja` のようにハイフンが入ります。
+
+```bash
+DIRECTION=en-ja
+jq --arg direction "$DIRECTION" \
+  '.models[$direction] | to_entries | map({
+    index: .key,
+    architecture: .value.architecture,
+    releaseStatus: .value.releaseStatus,
+    files: .value.files
+  })' models.json
+```
+
+この出力から選んだ候補のインデックスを `MODEL_INDEX` に指定します。次の例では、現在の `en-ja` の `Release` 候補であるインデックス `1` を選び、`models/enja` に保存します。別の翻訳方向や候補を使う場合は、`DIRECTION`、`MODEL_INDEX`、`MODEL_DIR` をまとめて変更してください。
+
+```bash
+DIRECTION=en-ja
+MODEL_INDEX=1
+MODEL_DIR=models/enja
+set -euo pipefail
+BASE_URL=$(jq -r '.baseUrl' models.json)
+
+mkdir -p "$MODEL_DIR"
+jq -r --arg direction "$DIRECTION" --argjson index "$MODEL_INDEX" '
+  .models[$direction][$index].files
+  | [
+      .model.path,
+      .vocab.path,
+      .srcVocab.path,
+      .trgVocab.path,
+      .lexicalShortlist.path
+    ]
+  | .[]
+  | select(type == "string")
+' models.json |
+while IFS= read -r path; do
+  curl --fail --location \
+    --output "$MODEL_DIR/$(basename "$path")" \
+    "$BASE_URL/$path"
+done
+
+gzip --decompress "$MODEL_DIR"/*.gz
+```
+
+この手順で、モデル、単一の語彙または翻訳元・翻訳先に分かれた語彙、および lexical shortlist を取得します。展開後、`MODEL_DIR` にコンフィグファイルを作成し、`ls "$MODEL_DIR"` で表示される展開済みファイルの正確な名前を使用してください。
 
 ### 2. コンフィグファイルを作成する
 
@@ -80,8 +123,8 @@ relative-paths: true
 models:
 - model.enja.intgemm.alphas.bin
 vocabs:
-- vocab.enja.spm
-- vocab.enja.spm
+- srcvocab.enja.spm
+- trgvocab.enja.spm
 shortlist:
 - lex.50.50.enja.s2t.bin
 - false
