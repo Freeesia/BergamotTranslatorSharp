@@ -1,0 +1,100 @@
+diff --git a/src/3rd_party/faiss/utils/hamming.h b/src/3rd_party/faiss/utils/hamming.h
+--- a/src/3rd_party/faiss/utils/hamming.h
++++ b/src/3rd_party/faiss/utils/hamming.h
+@@ -34 +34,3 @@
++#if !defined(_M_IX86)
+ #define __builtin_popcountl __popcnt64
++#endif
+@@ -119,2 +121,12 @@ static inline int popcount64(uint64_t x) {
++#if defined(_MSC_VER) && defined(_M_IX86)
++    // MSVC does not expose __popcnt64 when targeting x86. Use a portable
++    // parallel bit count so the x86 build keeps its SSE2 CPU baseline.
++    x -= (x >> 1) & UINT64_C(0x5555555555555555);
++    x = (x & UINT64_C(0x3333333333333333))
++        + ((x >> 2) & UINT64_C(0x3333333333333333));
++    x = (x + (x >> 4)) & UINT64_C(0x0F0F0F0F0F0F0F0F);
++    return (int)((x * UINT64_C(0x0101010101010101)) >> 56);
++#else
+     return __builtin_popcountl(x);
++#endif
+ }
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -664,14 +664,20 @@ if(COMPILE_CPU)
+       set(BLAS_FOUND TRUE)
+       add_definitions(-DBLAS_FOUND=1 -DMKL_FOUND=1)
+     else(MKL_FOUND)
++      if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 4)
++        find_package(OpenBLAS CONFIG REQUIRED)
++        set(EXT_LIBS ${EXT_LIBS} OpenBLAS::OpenBLAS)
++        add_definitions(-DBLAS_FOUND=1)
++      else()
+       set(BLAS_VENDOR "OpenBLAS")
+       find_package(BLAS)
+       if(BLAS_FOUND)
+         include(FindCBLAS)
+         if(CBLAS_FOUND)
+           include_directories(${BLAS_INCLUDE_DIR} ${CBLAS_INCLUDE_DIR})
+           set(EXT_LIBS ${EXT_LIBS} ${BLAS_LIBRARIES} ${CBLAS_LIBRARIES})
+           add_definitions(-DBLAS_FOUND=1)
+         endif(CBLAS_FOUND)
+       endif(BLAS_FOUND)
++      endif()
+     endif(MKL_FOUND)
+   endif(USE_ONNX_SGEMM)
+diff --git a/src/3rd_party/faiss/VectorTransform.cpp b/src/3rd_party/faiss/VectorTransform.cpp
+--- a/src/3rd_party/faiss/VectorTransform.cpp
++++ b/src/3rd_party/faiss/VectorTransform.cpp
+@@ -92,0 +93,23 @@ void matrix_qr(int m, int n, float *a)
++#if defined(_MSC_VER) && defined(_M_IX86)
++  // vcpkg's MSVC OpenBLAS build provides CBLAS but not the Fortran LAPACK
++  // entry points used below. Modified Gram-Schmidt is sufficient for the
++  // random rotation matrices needed by Marian and keeps this x86 build
++  // independent of those missing entry points.
++  for (int column = 0; column < n; ++column) {
++    for (int previous = 0; previous < column; ++previous) {
++      float dot = 0.0f;
++      for (int row = 0; row < m; ++row)
++        dot += a[row + column * m] * a[row + previous * m];
++      for (int row = 0; row < m; ++row)
++        a[row + column * m] -= dot * a[row + previous * m];
++    }
++
++    float norm = 0.0f;
++    for (int row = 0; row < m; ++row)
++      norm += a[row + column * m] * a[row + column * m];
++    norm = std::sqrt(norm);
++    ABORT_UNLESS(norm > 1e-12f, "matrix columns are linearly independent");
++    for (int row = 0; row < m; ++row)
++      a[row + column * m] /= norm;
++  }
++#else
+@@ -107,0 +131 @@ void matrix_qr(int m, int n, float *a)
++#endif
+@@ -434,0 +459,7 @@ void eig(size_t d_in, double *cov, double *eigenvalues, int verbose)
++#if defined(_MSC_VER) && defined(_M_IX86)
++    (void)d_in;
++    (void)cov;
++    (void)eigenvalues;
++    (void)verbose;
++    ABORT("PCA initialization requires LAPACK, which is unavailable in the MSVC x86 OpenBLAS build");
++#else
+@@ -482,0 +514 @@ void eig(size_t d_in, double *cov, double *eigenvalues, int verbose)
++#endif
+diff --git a/src/3rd_party/intgemm/intgemm/intgemm.cc b/src/3rd_party/intgemm/intgemm/intgemm.cc
+--- a/src/3rd_party/intgemm/intgemm/intgemm.cc
++++ b/src/3rd_party/intgemm/intgemm/intgemm.cc
+@@ -44,0 +45 @@ CPUType RealCPUID() {
++  (void)ebx;
+diff --git a/src/3rd_party/intgemm/intgemm/intgemm.h b/src/3rd_party/intgemm/intgemm/intgemm.h
+--- a/src/3rd_party/intgemm/intgemm/intgemm.h
++++ b/src/3rd_party/intgemm/intgemm/intgemm.h
+@@ -220,2 +220,2 @@
+ template <typename Callback>
+-void (*const Int8::MultiplyImpl<Callback>::run)(const int8_t *A, const int8_t *B, Index A_rows, Index width, Index B_cols, Callback callback) = ChooseCPU(OMPParallelWrap<Callback, AVX512VNNI::Kernels8>, OMPParallelWrap<Callback, AVX512BW::Kernels8>, OMPParallelWrap<Callback, AVX2::Kernels8>, OMPParallelWrap<Callback, SSSE3::Kernels8>, Unsupported_8bit::Multiply<Callback>, Unsupported_8bit::Multiply<Callback>);
++void (*const Int8::MultiplyImpl<Callback>::run)(const int8_t *A, const int8_t *B, Index A_rows, Index width, Index B_cols, Callback callback) = ChooseCPU<void (*)(const int8_t *, const int8_t *, Index, Index, Index, Callback)>(OMPParallelWrap<Callback, AVX512VNNI::Kernels8>, OMPParallelWrap<Callback, AVX512BW::Kernels8>, OMPParallelWrap<Callback, AVX2::Kernels8>, OMPParallelWrap<Callback, SSSE3::Kernels8>, Unsupported_8bit::Multiply<Callback>, Unsupported_8bit::Multiply<Callback>);
+@@ -347,2 +347,2 @@
+ template <typename Callback>
+-void (*const Int16::MultiplyImpl<Callback>::run)(const int16_t *A, const int16_t *B, Index A_rows, Index width, Index B_cols, Callback callback) = ChooseCPU(OMPParallelWrap<Callback, AVX512BW::Kernels16> /*TODO VNNI 16-bit. */, OMPParallelWrap<Callback, AVX512BW::Kernels16>, OMPParallelWrap<Callback, AVX2::Kernels16>, OMPParallelWrap<Callback, SSE2::Kernels16>, OMPParallelWrap<Callback, SSE2::Kernels16>, Unsupported_16bit::Multiply<Callback>);
++void (*const Int16::MultiplyImpl<Callback>::run)(const int16_t *A, const int16_t *B, Index A_rows, Index width, Index B_cols, Callback callback) = ChooseCPU<void (*)(const int16_t *, const int16_t *, Index, Index, Index, Callback)>(OMPParallelWrap<Callback, AVX512BW::Kernels16> /*TODO VNNI 16-bit. */, OMPParallelWrap<Callback, AVX512BW::Kernels16>, OMPParallelWrap<Callback, AVX2::Kernels16>, OMPParallelWrap<Callback, SSE2::Kernels16>, OMPParallelWrap<Callback, SSE2::Kernels16>, Unsupported_16bit::Multiply<Callback>);

@@ -5,6 +5,10 @@
     {
       "name": "intel-mkl",
       "platform": "x64 & (windows | linux)"
+    },
+    {
+      "name": "openblas",
+      "platform": "x86 & windows"
     }
   ]
 }

@@ -15,15 +15,37 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   endif()
 endif()
 
+if(POLICY CMP0091)
+  # Let targets select the MSVC runtime through MSVC_RUNTIME_LIBRARY.
+  cmake_policy(SET CMP0091 NEW)
+endif()
+
 project(bergamot CXX C)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(MSVC)
+  # The existing Windows build uses the static CRT. Express that choice
+  # through CMake as well so C-only dependencies such as zlib match C++.
+  set(CMAKE_MSVC_RUNTIME_LIBRARY
+    "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" BERGAMOT_SYSTEM_PROCESSOR)
 set(BERGAMOT_TARGET_ARM64 OFF)
-if(BERGAMOT_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+string(TOLOWER "${CMAKE_GENERATOR_PLATFORM}" BERGAMOT_GENERATOR_PLATFORM)
+if(WIN32 AND CMAKE_GENERATOR_PLATFORM)
+  if(BERGAMOT_GENERATOR_PLATFORM MATCHES "^(arm64|arm64ec)$")
+    set(BERGAMOT_TARGET_ARM64 ON)
+  endif()
+elseif(BERGAMOT_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
   set(BERGAMOT_TARGET_ARM64 ON)
+endif()
+
+set(BERGAMOT_TARGET_X86 OFF)
+if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 4)
+  set(BERGAMOT_TARGET_X86 ON)
 endif()
 
 set(BERGAMOT_TARGET_CLANG_CL OFF)
@@ -88,10 +110,30 @@ if(WIN32 AND BERGAMOT_TARGET_ARM64)
   endif()
 endif()
 
+if(WIN32 AND BERGAMOT_TARGET_X86)
+  # The vcpkg Intel MKL port is only available for x64 Windows. The x86
+  # manifest instead supplies OpenBLAS, which the Marian compatibility
+  # patch consumes through its vcpkg CMake target.
+  set(USE_MKL OFF CACHE BOOL "Compile with MKL support" FORCE)
+
+  set(BERGAMOT_X86_PATCH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/patches/windows-x86")
+  bergamot_apply_dependency_patch(
+    "${CMAKE_CURRENT_SOURCE_DIR}/bergamot-translator/3rd_party/marian-dev"
+    "${BERGAMOT_X86_PATCH_DIR}/marian-dev.patch")
+endif()
+
 function(bergamot_configure_windows_arm64_target target_name)
   if(WIN32 AND BERGAMOT_TARGET_ARM64 AND MSVC AND TARGET ${target_name})
     target_compile_options(${target_name} PUBLIC
       /U__AVX__ /U__AVX2__ /U__SSE__ /U__SSE2__ /UUSE_SSE2)
+  endif()
+endfunction()
+
+function(bergamot_configure_windows_x86_target target_name)
+  if(WIN32 AND BERGAMOT_TARGET_X86 AND MSVC AND TARGET ${target_name})
+    # Marian enables /WX, but its 32-bit build emits many intentional
+    # size_t/narrowing warnings that do not occur in the 64-bit builds.
+    target_compile_options(${target_name} PRIVATE /WX-)
   endif()
 endfunction()
 
@@ -170,6 +212,8 @@ set(SPM_ENABLE_TCMALLOC OFF CACHE BOOL "Disable the system tcmalloc archive" FOR
 add_subdirectory(bergamot-translator)
 bergamot_configure_windows_arm64_target(marian)
 bergamot_configure_windows_arm64_target(bergamot-translator)
+bergamot_configure_windows_x86_target(marian)
+bergamot_configure_windows_x86_target(bergamot-translator)
 if(WIN32 AND BERGAMOT_TARGET_ARM64 AND BERGAMOT_TARGET_CLANG_CL AND TARGET marian)
   target_compile_options(marian PRIVATE /WX-)
 endif()
@@ -184,5 +228,7 @@ endif()
 
 add_subdirectory(bergamot-translator-dynamic)
 bergamot_configure_windows_arm64_target(bergamot_translator_dynamic)
+bergamot_configure_windows_x86_target(bergamot_translator_dynamic)
 add_subdirectory(native-sample)
 bergamot_configure_windows_arm64_target(native-sample)
+bergamot_configure_windows_x86_target(native-sample)
