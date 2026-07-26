@@ -151,7 +151,7 @@ jobs:
         run: |-
           ${{github.workspace}}\\ccache.exe -sv # Print current cache stats
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
           path: libs/*
@@ -238,7 +238,7 @@ jobs:
         run: cmake --install build --prefix libs --component bergamot_translator_dynamic
       - name: ccache epilog
         run: 'ccache -s # Print current cache stats'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
           path: libs/*
@@ -321,7 +321,7 @@ jobs:
         run: cmake --install . --prefix "../libs/${{ matrix.arch }}" --component bergamot_translator_dynamic
       - name: ccache epilog
         run: 'ccache -s # Print current cache stats'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
           path: libs/*
@@ -359,7 +359,7 @@ jobs:
             -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} \
             -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} \
             -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: nupkg
           path: pack/*
