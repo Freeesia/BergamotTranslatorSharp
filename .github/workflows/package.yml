@@ -67,7 +67,7 @@ jobs:
       CCACHE_CMAKE_ARGS: -DCMAKE_CXX_COMPILER_LAUNCHER=${{ github.workspace }}\ccache.exe -DCMAKE_C_COMPILER_LAUNCHER=${{ github.workspace }}\ccache.exe
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -181,7 +181,7 @@ jobs:
       ccache_cmake: -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Install Dependencies
@@ -266,7 +266,7 @@ jobs:
       ccache_cmake: -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Install Dependencies
@@ -338,7 +338,7 @@ jobs:
       id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: actions/setup-dotnet@v6
