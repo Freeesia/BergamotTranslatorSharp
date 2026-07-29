@@ -1,9 +1,14 @@
 {
+  "builtin-baseline": "cd61e1e26a038e82d6550a3ebbe0fbbfe7da78e3",
   "dependencies": [
     "pcre2",
     {
       "name": "intel-mkl",
       "platform": "x64 & (windows | linux)"
+    },
+    {
+      "name": "openblas",
+      "platform": "x86 & windows"
     }
   ]
 }

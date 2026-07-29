@@ -17,6 +17,11 @@
       <PackagePath>runtimes\win-arm64\native\</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\libs\bin\win-x86\bergamot.dll" Condition="Exists('..\libs\bin\win-x86\bergamot.dll')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes\win-x86\native</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\libs\lib\linux\libbergamot.so" Condition="Exists('..\libs\lib\linux\libbergamot.so')">
       <Pack>true</Pack>
       <PackagePath>runtimes\linux-x64\native</PackagePath>
@@ -27,11 +32,20 @@
       <PackagePath>runtimes\linux-arm64\native</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="..\libs\lib\macos\libbergamot.dylib" Condition="Exists('..\libs\lib\macos\libbergamot.dylib')">
+    <None Include="..\libs\arm64\lib\macos\libbergamot.dylib" Condition="Exists('..\libs\arm64\lib\macos\libbergamot.dylib')">
       <Pack>true</Pack>
       <PackagePath>runtimes/osx-arm64/native</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\libs\x64\lib\macos\libbergamot.dylib" Condition="Exists('..\libs\x64\lib\macos\libbergamot.dylib')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/osx-x64/native</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BergamotTranslatorSharp.Tests" />
   </ItemGroup>
 
 </Project>

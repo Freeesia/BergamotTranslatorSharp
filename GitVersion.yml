@@ -4,3 +4,7 @@ tag-prefix: '[vV]'
 ignore:
   sha: []
 merge-message-formats: {}
+branches:
+  main:
+    mode: ContinuousDelivery
+    label: ci
