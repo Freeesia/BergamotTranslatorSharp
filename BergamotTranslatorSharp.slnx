@@ -1,0 +1,12 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/!SolutionItems/">
+    <File Path="Directory.Build.props" />
+  </Folder>
+  <Project Path="BergamotTranslatorSharp/BergamotTranslatorSharp.csproj" />
+  <Project Path="ManagedSample/ManagedSample.csproj" />
+</Solution>

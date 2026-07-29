@@ -7,7 +7,7 @@
             "icon": "terminal-cmd"
         }
     },
-    "dotnet.defaultSolution": "BergamotTranslatorSharp.sln",
+    "dotnet.defaultSolution": "BergamotTranslatorSharp.slnx",
     "cmake.cmakePath": "${workspaceFolder}/cmake.bat",
     "cmake.configureArgs": [
         "-DCMAKE_TOOLCHAIN_FILE=\"%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake\"",
