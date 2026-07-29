@@ -52,9 +52,7 @@ public sealed partial class BlockingService : IDisposable
         if (textList.Count == 0)
             return [];
 
-        // HTML-escape each text, replace newlines with <br>, wrap in <p>
-        var html = string.Concat(textList.Select(t =>
-            $"<p>{WebUtility.HtmlEncode(t).Replace("\r\n", "<br>").Replace("\n", "<br>")}</p>"));
+        var html = BuildBatchHtml(textList);
 
         // Translate as HTML
         var translatedHtml = Translate(html, html: true);
@@ -62,6 +60,23 @@ public sealed partial class BlockingService : IDisposable
         // Extract translated text from each <p> tag, convert <br> back to newlines, decode HTML entities
         return [.. Regex.Matches(translatedHtml, @"<p>(.*?)</p>", RegexOptions.Singleline)
             .Select(m => WebUtility.HtmlDecode(Regex.Replace(m.Groups[1].Value, @"<br\s*/?>", "\n")))];
+    }
+
+    internal static string BuildBatchHtml(IEnumerable<string> texts)
+    {
+        // HTML-escape each text, replace newlines with <br>, wrap in <p>
+        return string.Concat(texts.Select(t =>
+            $"<p>{EncodeHtmlText(t).Replace("\r\n", "<br>").Replace("\n", "<br>")}</p>"));
+    }
+
+    private static string EncodeHtmlText(string text)
+    {
+        // Bergamot supports named HTML entities, but not numeric entities such as
+        // &#39;. Quotes do not need escaping in an element's text content.
+        return text
+            .Replace("&", "&amp;", StringComparison.Ordinal)
+            .Replace("<", "&lt;", StringComparison.Ordinal)
+            .Replace(">", "&gt;", StringComparison.Ordinal);
     }
 
     private void Dispose(bool disposing)
