@@ -344,6 +344,7 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
+      - run: dotnet test BergamotTranslatorSharp.Tests -c Release
       - uses: gittools/actions/gitversion/setup@v4.7.0
         with:
           versionSpec: "6.2.x"
