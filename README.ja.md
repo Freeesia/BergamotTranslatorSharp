@@ -37,7 +37,7 @@ dotnet add package BergamotTranslatorSharp
 
 ### 必要条件
 
-- .NET 8.0 以上
+- .NET 8.0 以上（ライブラリのターゲットフレームワークは .NET 8.0 と .NET 10.0）
 - Windows x86、Windows x64、Windows ARM64、Linux x64、macOS x64、macOS ARM64
 
 ### ネイティブライブラリをソースからビルドする

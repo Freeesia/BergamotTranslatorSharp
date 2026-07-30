@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // ターゲット フレームワークを変更した場合は、プログラム パスを更新するようにしてください。
-            "program": "${workspaceFolder}/ManagedSample/bin/Debug/net9.0/ManagedSample.dll",
+            "program": "${workspaceFolder}/ManagedSample/bin/Debug/net10.0/ManagedSample.dll",
             "args": [
                 "${workspaceFolder}/models/enja/config.yml",
                 "${input:text}"
@@ -29,7 +29,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // ターゲット フレームワークを変更した場合は、プログラム パスを更新するようにしてください。
-            "program": "${workspaceFolder}/ManagedSample/bin/Debug/net9.0/ManagedSample.dll",
+            "program": "${workspaceFolder}/ManagedSample/bin/Debug/net10.0/ManagedSample.dll",
             "args": [
                 "${workspaceFolder}/models/koen/config.yml",
                 "${workspaceFolder}/models/enja/config.yml",
