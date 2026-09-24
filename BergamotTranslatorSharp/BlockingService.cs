@@ -26,7 +26,7 @@ public sealed partial class BlockingService : IDisposable
     [DllImport("bergamot", CallingConvention = CallingConvention.Cdecl)]
     private static extern IntPtr translator_translate_multiple(
         IntPtr translator,
-        [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPUTF8Str, SizeParamIndex = 2)] string[] texts,
+        IntPtr texts,
         nuint count);
 
     [DllImport("bergamot", CallingConvention = CallingConvention.Cdecl)]
@@ -64,12 +64,21 @@ public sealed partial class BlockingService : IDisposable
         if (textList.Any(static text => text is null))
             throw new ArgumentException("Batch input cannot contain null values.", nameof(texts));
 
-        var translations = translator_translate_multiple(translator, textList, (nuint)textList.Length);
-        if (translations == IntPtr.Zero)
-            throw new InvalidOperationException("Failed to translate batch");
-
+        var textPointers = new IntPtr[textList.Length];
+        var textPointersBuffer = Marshal.AllocHGlobal(checked(textList.Length * IntPtr.Size));
+        var translations = IntPtr.Zero;
         try
         {
+            for (var i = 0; i < textList.Length; i++)
+            {
+                textPointers[i] = Marshal.StringToCoTaskMemUTF8(textList[i]);
+                Marshal.WriteIntPtr(textPointersBuffer, i * IntPtr.Size, textPointers[i]);
+            }
+
+            translations = translator_translate_multiple(translator, textPointersBuffer, (nuint)textList.Length);
+            if (translations == IntPtr.Zero)
+                throw new InvalidOperationException("Failed to translate batch");
+
             var result = new string[textList.Length];
             for (var i = 0; i < textList.Length; i++)
             {
@@ -82,7 +91,16 @@ public sealed partial class BlockingService : IDisposable
         }
         finally
         {
-            translator_free_translations(translations);
+            if (translations != IntPtr.Zero)
+                translator_free_translations(translations);
+
+            foreach (var textPointer in textPointers)
+            {
+                if (textPointer != IntPtr.Zero)
+                    Marshal.FreeCoTaskMem(textPointer);
+            }
+
+            Marshal.FreeHGlobal(textPointersBuffer);
         }
     }
 
