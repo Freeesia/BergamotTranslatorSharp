@@ -16,7 +16,7 @@ public sealed class BlockingServiceTests(TranslatorModelFixture models) : IClass
     {
         using var service = new BlockingService(models.ConfigurationFor("en-kn"));
 
-        var expected = Inputs.Select(service.Translate).ToArray();
+        var expected = Inputs.Select(input => service.Translate(input)).ToArray();
         var actual = service.Translate(Inputs);
 
         Assert.Equal(expected, actual);
@@ -32,7 +32,7 @@ public sealed class BlockingServiceTests(TranslatorModelFixture models) : IClass
             models.ConfigurationFor("en-kn"),
             models.ConfigurationFor("kn-en"));
 
-        var expected = Inputs.Select(service.Translate).ToArray();
+        var expected = Inputs.Select(input => service.Translate(input)).ToArray();
         var actual = service.Translate(Inputs);
 
         Assert.Equal(expected, actual);
