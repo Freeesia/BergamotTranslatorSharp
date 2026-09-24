@@ -143,7 +143,9 @@ public sealed class TranslatorModelFixture : IAsyncLifetime
             relative-paths: true
             models:
             - {{Model.OutputFileName}}
+            # These models share one vocabulary; Bergamot needs source and target entries.
             vocabs:
+            - {{Vocabulary.OutputFileName}}
             - {{Vocabulary.OutputFileName}}
             shortlist:
             - {{Shortlist.OutputFileName}}
