@@ -30,7 +30,7 @@ public sealed partial class BlockingService : IDisposable
         nuint count);
 
     [DllImport("bergamot", CallingConvention = CallingConvention.Cdecl)]
-    private static extern void translator_free_translations(IntPtr translations, nuint count);
+    private static extern void translator_free_translations(IntPtr translations);
 
     public BlockingService(params string[] configPaths)
     {
@@ -74,7 +74,7 @@ public sealed partial class BlockingService : IDisposable
         }
         finally
         {
-            translator_free_translations(translations, (nuint)textList.Length);
+            translator_free_translations(translations);
         }
     }
 

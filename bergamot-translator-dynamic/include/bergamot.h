@@ -53,9 +53,8 @@ extern "C"
   /**
    * @brief translator_translate_multiple が返した翻訳結果と配列を解放
    * @param translations 解放する翻訳結果配列
-   * @param count 配列内のテキスト数
    */
-  BERGAMOT_API void translator_free_translations(char **translations, size_t count);
+  BERGAMOT_API void translator_free_translations(char **translations);
 
   /**
    * @brief トランスレーターを解放

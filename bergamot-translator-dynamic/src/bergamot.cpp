@@ -40,15 +40,6 @@ namespace
 #endif
     }
 
-    char *copyTranslation(const std::string &text)
-    {
-        auto *result = static_cast<char *>(allocateTranslationMemory(text.size() + 1));
-        if (!result)
-            return nullptr;
-
-        std::memcpy(result, text.c_str(), text.size() + 1);
-        return result;
-    }
 }
 
 // トランスレーターの状態を保持する構造体
@@ -160,8 +151,6 @@ extern "C"
         try
         {
             auto state = static_cast<BergamotTranslatorState *>(translator);
-            if (state->models.empty() || state->models.size() > 2)
-                return nullptr;
 
             std::vector<std::string> sources;
             sources.reserve(count);
@@ -174,34 +163,33 @@ extern "C"
 
             // The batch API translates plain text; leave HTML handling disabled for each input.
             std::vector<ResponseOptions> options(count);
-            std::vector<Response> responses;
-            if (state->models.size() == 1)
-            {
-                responses = state->service->translateMultiple(state->models[0], std::move(sources), options);
-            }
-            else
-            {
-                responses = state->service->pivotMultiple(state->models[0], state->models[1], std::move(sources), options);
-            }
+            auto responses = state->models.size() == 1
+                ? state->service->translateMultiple(state->models[0], std::move(sources), options)
+                : state->service->pivotMultiple(state->models[0], state->models[1], std::move(sources), options);
 
             if (responses.size() != count)
                 return nullptr;
 
-            auto **translations = static_cast<char **>(allocateTranslationMemory(sizeof(char *) * count));
+            size_t translationsSize = sizeof(char *) * count;
+            for (const auto &response : responses)
+            {
+                const size_t textSize = response.target.text.size();
+                if (textSize >= std::numeric_limits<size_t>::max() - translationsSize)
+                    return nullptr;
+                translationsSize += textSize + 1;
+            }
+
+            auto **translations = static_cast<char **>(allocateTranslationMemory(translationsSize));
             if (!translations)
                 return nullptr;
 
-            for (size_t i = 0; i < count; ++i)
-                translations[i] = nullptr;
-
+            auto *textBuffer = reinterpret_cast<char *>(translations + count);
             for (size_t i = 0; i < count; ++i)
             {
-                translations[i] = copyTranslation(responses[i].target.text);
-                if (!translations[i])
-                {
-                    translator_free_translations(translations, count);
-                    return nullptr;
-                }
+                const auto &text = responses[i].target.text;
+                translations[i] = textBuffer;
+                std::memcpy(textBuffer, text.c_str(), text.size() + 1);
+                textBuffer += text.size() + 1;
             }
 
             return translations;
@@ -213,13 +201,8 @@ extern "C"
         }
     }
 
-    void translator_free_translations(char **translations, size_t count)
+    void translator_free_translations(char **translations)
     {
-        if (!translations)
-            return;
-
-        for (size_t i = 0; i < count; ++i)
-            freeTranslationMemory(translations[i]);
         freeTranslationMemory(translations);
     }
 
