@@ -4,6 +4,12 @@
 #include "translator/response_options.h"
 #include "translator/service.h"
 #include "translator/translation_model.h"
+#include <cstdlib>
+#include <cstring>
+#include <limits>
+#include <string>
+#include <utility>
+#include <vector>
 #ifdef _WIN32
 #include <combaseapi.h>
 #endif
@@ -13,6 +19,37 @@ using marian::bergamot::parseOptionsFromFilePath;
 using marian::bergamot::Response;
 using marian::bergamot::ResponseOptions;
 using marian::bergamot::TranslationModel;
+
+namespace
+{
+    void *allocateTranslationMemory(size_t size)
+    {
+#ifdef _WIN32
+        return CoTaskMemAlloc(size);
+#else
+        return std::malloc(size);
+#endif
+    }
+
+    void freeTranslationMemory(void *memory)
+    {
+#ifdef _WIN32
+        CoTaskMemFree(memory);
+#else
+        std::free(memory);
+#endif
+    }
+
+    char *copyTranslation(const std::string &text)
+    {
+        auto *result = static_cast<char *>(allocateTranslationMemory(text.size() + 1));
+        if (!result)
+            return nullptr;
+
+        std::memcpy(result, text.c_str(), text.size() + 1);
+        return result;
+    }
+}
 
 // トランスレーターの状態を保持する構造体
 struct BergamotTranslatorState
@@ -100,19 +137,81 @@ extern "C"
         // 翻訳結果を取得
         if (!responses.empty())
         {
-            auto translated = responses[0].target.text;
-            size_t len = translated.size() + 1;
-#ifdef _WIN32
-            char *result = (char *)CoTaskMemAlloc(len);
-#else
-            // tcmallocを直接使用してメモリ確保
-            char *result = (char *)malloc(len);
-#endif
-            memcpy(result, translated.c_str(), len);
-            return result;
+            return copyTranslation(responses[0].target.text);
         }
 
         return nullptr;
+    }
+
+    char **translator_translate_multiple(void *translator, const char **texts, size_t count)
+    {
+        if (!translator || !texts || count == 0 || count > std::numeric_limits<size_t>::max() / sizeof(char *))
+            return nullptr;
+
+        try
+        {
+            auto state = static_cast<BergamotTranslatorState *>(translator);
+            if (state->models.empty() || state->models.size() > 2)
+                return nullptr;
+
+            std::vector<std::string> sources;
+            sources.reserve(count);
+            for (size_t i = 0; i < count; ++i)
+            {
+                if (!texts[i])
+                    return nullptr;
+                sources.emplace_back(texts[i]);
+            }
+
+            // The batch API translates plain text; leave HTML handling disabled for each input.
+            std::vector<ResponseOptions> options(count);
+            std::vector<Response> responses;
+            if (state->models.size() == 1)
+            {
+                responses = state->service->translateMultiple(state->models[0], std::move(sources), options);
+            }
+            else
+            {
+                responses = state->service->pivotMultiple(state->models[0], state->models[1], std::move(sources), options);
+            }
+
+            if (responses.size() != count)
+                return nullptr;
+
+            auto **translations = static_cast<char **>(allocateTranslationMemory(sizeof(char *) * count));
+            if (!translations)
+                return nullptr;
+
+            for (size_t i = 0; i < count; ++i)
+                translations[i] = nullptr;
+
+            for (size_t i = 0; i < count; ++i)
+            {
+                translations[i] = copyTranslation(responses[i].target.text);
+                if (!translations[i])
+                {
+                    translator_free_translations(translations, count);
+                    return nullptr;
+                }
+            }
+
+            return translations;
+        }
+        catch (...)
+        {
+            // Never allow a C++ exception to cross the C ABI boundary.
+            return nullptr;
+        }
+    }
+
+    void translator_free_translations(char **translations, size_t count)
+    {
+        if (!translations)
+            return;
+
+        for (size_t i = 0; i < count; ++i)
+            freeTranslationMemory(translations[i]);
+        freeTranslationMemory(translations);
     }
 
     void translator_free(void *translator)

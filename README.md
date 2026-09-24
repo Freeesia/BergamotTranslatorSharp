@@ -175,7 +175,15 @@ using var service = new BlockingService(configPath);
 var translated = service.Translate("Hello, world!");
 
 Console.WriteLine(translated);
+
+var translatedBatch = service.Translate(["Hello, world!", "How are you?"]);
+foreach (var translatedText in translatedBatch)
+{
+    Console.WriteLine(translatedText);
+}
 ```
+
+`Translate(IEnumerable<string>)` translates each text as a separate input and returns results in the same order.
 
 To translate text content while preserving HTML markup, pass `true` as the second argument:
 

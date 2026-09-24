@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace BergamotTranslatorSharp.Tests;
@@ -5,27 +6,27 @@ namespace BergamotTranslatorSharp.Tests;
 public class BlockingServiceTests
 {
     [Fact]
-    public void BuildBatchHtml_UsesOnlyEntitiesSupportedByBergamot()
+    public void ReadTranslations_PreservesOrderAndPlainTextContents()
     {
-        var html = BlockingService.BuildBatchHtml([
-            "That's",
-            "\"quoted\"",
-            "Tom & Jerry",
-            "<tag>",
-            "literal &#39;",
-        ]);
+        var expected = new[] { "second\nline", "first & <tag> > last" };
+        var resultArray = Marshal.AllocHGlobal(expected.Length * IntPtr.Size);
+        var resultPointers = new IntPtr[expected.Length];
 
-        Assert.Equal(
-            "<p>That's</p><p>\"quoted\"</p><p>Tom &amp; Jerry</p>" +
-            "<p>&lt;tag&gt;</p><p>literal &amp;#39;</p>",
-            html);
-    }
+        try
+        {
+            for (var i = 0; i < expected.Length; i++)
+            {
+                resultPointers[i] = Marshal.StringToCoTaskMemUTF8(expected[i]);
+                Marshal.WriteIntPtr(resultArray, i * IntPtr.Size, resultPointers[i]);
+            }
 
-    [Fact]
-    public void BuildBatchHtml_ConvertsNewlinesToBreakElements()
-    {
-        var html = BlockingService.BuildBatchHtml(["line 1\r\nline 2\nline 3"]);
-
-        Assert.Equal("<p>line 1<br>line 2<br>line 3</p>", html);
+            Assert.Equal(expected, BlockingService.ReadTranslations(resultArray, expected.Length));
+        }
+        finally
+        {
+            foreach (var resultPointer in resultPointers)
+                Marshal.FreeCoTaskMem(resultPointer);
+            Marshal.FreeHGlobal(resultArray);
+        }
     }
 }

@@ -175,7 +175,15 @@ using var service = new BlockingService(configPath);
 var translated = service.Translate("Hello, world!");
 
 Console.WriteLine(translated);
+
+var translatedBatch = service.Translate(["Hello, world!", "How are you?"]);
+foreach (var translatedText in translatedBatch)
+{
+    Console.WriteLine(translatedText);
+}
 ```
+
+`Translate(IEnumerable<string>)` は各テキストを個別の入力としてまとめて翻訳し、入力と同じ順序で結果を返します。
 
 HTML マークアップを保持したままテキスト部分を翻訳するには、第 2 引数に `true` を指定します。
 
