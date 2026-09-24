@@ -137,7 +137,16 @@ extern "C"
         // 翻訳結果を取得
         if (!responses.empty())
         {
-            return copyTranslation(responses[0].target.text);
+            auto translated = responses[0].target.text;
+            size_t len = translated.size() + 1;
+#ifdef _WIN32
+            char *result = (char *)CoTaskMemAlloc(len);
+#else
+            // tcmallocを直接使用してメモリ確保
+            char *result = (char *)malloc(len);
+#endif
+            memcpy(result, translated.c_str(), len);
+            return result;
         }
 
         return nullptr;
