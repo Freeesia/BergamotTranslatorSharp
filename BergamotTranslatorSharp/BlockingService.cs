@@ -70,29 +70,20 @@ public sealed partial class BlockingService : IDisposable
 
         try
         {
-            return ReadTranslations(translations, textList.Length);
+            var result = new string[textList.Length];
+            for (var i = 0; i < textList.Length; i++)
+            {
+                var translatedText = Marshal.ReadIntPtr(translations, i * IntPtr.Size);
+                result[i] = Marshal.PtrToStringUTF8(translatedText)
+                    ?? throw new InvalidOperationException($"Native translation result {i} is null");
+            }
+
+            return result;
         }
         finally
         {
             translator_free_translations(translations);
         }
-    }
-
-    internal static string[] ReadTranslations(IntPtr translations, int count)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(count);
-        if (translations == IntPtr.Zero)
-            throw new ArgumentNullException(nameof(translations));
-
-        var result = new string[count];
-        for (var i = 0; i < count; i++)
-        {
-            var translatedText = Marshal.ReadIntPtr(translations, i * IntPtr.Size);
-            result[i] = Marshal.PtrToStringUTF8(translatedText)
-                ?? throw new InvalidOperationException($"Native translation result {i} is null");
-        }
-
-        return result;
     }
 
     private void Dispose(bool disposing)
