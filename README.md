@@ -195,6 +195,17 @@ var translatedHtmlBatch = service.Translate(
     html: true);
 ```
 
+To translate only string values in JSON, use `TranslateJson`:
+
+```cs
+var translatedJson = service.TranslateJson(
+    """{"title":"Hello, world!","body":"<p>How are <strong>you</strong>?</p>","count":2}""");
+```
+
+Property names, non-string values, empty strings, and whitespace-only strings are kept as they are. HTML inside a string value is interpreted as HTML, so its tags are preserved while its text is translated. JSON formatting may be normalized. Invalid JSON or HTML that cannot be mapped back to every string value throws an exception.
+
+For another structured format, implement `IHtmlTranslationConverter<T>` to produce an `IHtmlTranslationContext<T>` and call `service.Translate(value, converter)`. The context holds the translation HTML and the information needed to restore the original structure.
+
 If you pass one configuration file path, `BlockingService` uses that model directly.
 If you pass two configuration file paths, the native service uses them as a pivot translation chain.
 

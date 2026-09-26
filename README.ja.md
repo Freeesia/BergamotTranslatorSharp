@@ -195,6 +195,17 @@ var translatedHtmlBatch = service.Translate(
     html: true);
 ```
 
+JSON 内の文字列値だけを翻訳するには `TranslateJson` を使用します。
+
+```cs
+var translatedJson = service.TranslateJson(
+    """{"title":"Hello, world!","body":"<p>How are <strong>you</strong>?</p>","count":2}""");
+```
+
+プロパティ名、文字列以外の値、空文字列、空白文字だけの文字列は保持されます。文字列値に HTML が含まれる場合、タグを保持してテキストを翻訳します。JSON の書式は正規化されることがあります。不正な JSON や、各文字列値へ対応付けて復元できない HTML は例外になります。
+
+別の構造化形式には `IHtmlTranslationConverter<T>` を実装し、`IHtmlTranslationContext<T>` を返して `service.Translate(value, converter)` を呼び出せます。コンテキストは翻訳用 HTML と元の構造へ戻すための情報を保持します。
+
 コンフィグファイルパスを 1 個渡した場合、`BlockingService` はそのモデルを直接使用します。
 コンフィグファイルパスを 2 個渡した場合、ネイティブサービスはそれらをピボット翻訳チェーンとして使用します。
 

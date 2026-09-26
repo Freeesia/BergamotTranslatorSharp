@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace BergamotTranslatorSharp.Tests;
@@ -70,5 +71,21 @@ public sealed class BlockingServiceTests(TranslatorModelFixture models) : IClass
 
         Assert.Equal(expected, actual);
         Assert.Contains("<strong>", actual[0]);
+    }
+
+    [Fact]
+    public void TranslateJson_PreservesJsonStructureAndInnerHtml()
+    {
+        using var service = new BlockingService(models.ConfigurationFor("en-kn"));
+        const string json = """{"title":"Hello, world!","items":["<p>How are <strong>you</strong>?</p>","",7,true,null]}""";
+
+        var result = JsonNode.Parse(service.TranslateJson(json));
+
+        Assert.NotEqual("Hello, world!", result?["title"]?.GetValue<string>());
+        Assert.Contains("<strong>", result?["items"]?[0]?.GetValue<string>());
+        Assert.Equal("", result?["items"]?[1]?.GetValue<string>());
+        Assert.Equal(7, result?["items"]?[2]?.GetValue<int>());
+        Assert.Equal(true, result?["items"]?[3]?.GetValue<bool>());
+        Assert.Null(result?["items"]?[4]);
     }
 }

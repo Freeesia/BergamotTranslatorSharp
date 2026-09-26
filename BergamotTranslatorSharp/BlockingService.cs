@@ -52,6 +52,24 @@ public sealed partial class BlockingService : IDisposable
         return translator_translate(translator, text, html);
     }
 
+    /// <summary>Translates structured data through a converter's HTML representation.</summary>
+    public T Translate<T>(T value, IHtmlTranslationConverter<T> converter)
+    {
+        if (disposedValue)
+            throw new ObjectDisposedException(nameof(BlockingService));
+
+        ArgumentNullException.ThrowIfNull(converter);
+        var context = converter.ToHtml(value);
+        var translatedHtml = context.HasTranslatableContent
+            ? Translate(context.Html, html: true)
+            : context.Html;
+        return context.FromHtml(translatedHtml);
+    }
+
+    /// <summary>Translates string values in JSON while preserving its structure and value types.</summary>
+    public string TranslateJson(string json)
+        => Translate(json, JsonHtmlTranslationConverter.Instance);
+
     public string[] Translate(IEnumerable<string> texts, bool html = false)
     {
         if (disposedValue)
