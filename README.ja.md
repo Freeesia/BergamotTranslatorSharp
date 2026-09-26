@@ -189,6 +189,10 @@ HTML マークアップを保持したままテキスト部分を翻訳するに
 
 ```cs
 var translatedHtml = service.Translate("<p>Hello, <strong>world</strong>!</p>", html: true);
+
+var translatedHtmlBatch = service.Translate(
+    ["<p>Hello, <strong>world</strong>!</p>", "<p>How are you?</p>"],
+    html: true);
 ```
 
 コンフィグファイルパスを 1 個渡した場合、`BlockingService` はそのモデルを直接使用します。

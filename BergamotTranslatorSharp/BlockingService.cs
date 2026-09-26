@@ -28,7 +28,8 @@ public sealed partial class BlockingService : IDisposable
     private static partial IntPtr translator_translate_multiple(
         IntPtr translator,
         string[] texts,
-        nuint count);
+        nuint count,
+        [MarshalAs(UnmanagedType.I1)] bool html);
 
     [DllImport("bergamot", CallingConvention = CallingConvention.Cdecl)]
     private static extern void translator_free_translations(IntPtr translations);
@@ -51,7 +52,7 @@ public sealed partial class BlockingService : IDisposable
         return translator_translate(translator, text, html);
     }
 
-    public string[] Translate(IEnumerable<string> texts)
+    public string[] Translate(IEnumerable<string> texts, bool html = false)
     {
         if (disposedValue)
             throw new ObjectDisposedException(nameof(BlockingService));
@@ -65,7 +66,7 @@ public sealed partial class BlockingService : IDisposable
         if (textList.Any(static text => text is null))
             throw new ArgumentException("Batch input cannot contain null values.", nameof(texts));
 
-        var translations = translator_translate_multiple(translator, textList, (nuint)textList.Length);
+        var translations = translator_translate_multiple(translator, textList, (nuint)textList.Length, html);
         if (translations == IntPtr.Zero)
             throw new InvalidOperationException("Failed to translate batch");
 

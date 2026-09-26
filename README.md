@@ -189,6 +189,10 @@ To translate text content while preserving HTML markup, pass `true` as the secon
 
 ```cs
 var translatedHtml = service.Translate("<p>Hello, <strong>world</strong>!</p>", html: true);
+
+var translatedHtmlBatch = service.Translate(
+    ["<p>Hello, <strong>world</strong>!</p>", "<p>How are you?</p>"],
+    html: true);
 ```
 
 If you pass one configuration file path, `BlockingService` uses that model directly.

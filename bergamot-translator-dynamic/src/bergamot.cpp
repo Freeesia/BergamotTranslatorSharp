@@ -143,7 +143,7 @@ extern "C"
         return nullptr;
     }
 
-    char **translator_translate_multiple(void *translator, const char **texts, size_t count)
+    char **translator_translate_multiple(void *translator, const char **texts, size_t count, bool html)
     {
         if (!translator || !texts || count == 0 || count > std::numeric_limits<size_t>::max() / sizeof(char *))
             return nullptr;
@@ -161,8 +161,9 @@ extern "C"
                 sources.emplace_back(texts[i]);
             }
 
-            // The batch API translates plain text; leave HTML handling disabled for each input.
-            std::vector<ResponseOptions> options(count);
+            ResponseOptions responseOptions;
+            responseOptions.HTML = html;
+            std::vector<ResponseOptions> options(count, responseOptions);
             auto responses = state->models.size() == 1
                 ? state->service->translateMultiple(state->models[0], std::move(sources), options)
                 : state->service->pivotMultiple(state->models[0], state->models[1], std::move(sources), options);
