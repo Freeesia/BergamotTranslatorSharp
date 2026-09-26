@@ -9,6 +9,7 @@ public sealed class BlockingServiceTests(TranslatorModelFixture models) : IClass
         "Hello, world!",
         "First line.\nSecond line.",
         "Fish & chips <tag> > cheese.",
+        "Café and 東京.",
     ];
 
     [Fact]
