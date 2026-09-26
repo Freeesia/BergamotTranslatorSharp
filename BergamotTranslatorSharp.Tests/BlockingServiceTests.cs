@@ -2,30 +2,73 @@ using Xunit;
 
 namespace BergamotTranslatorSharp.Tests;
 
-public class BlockingServiceTests
+public sealed class BlockingServiceTests(TranslatorModelFixture models) : IClassFixture<TranslatorModelFixture>
 {
-    [Fact]
-    public void BuildBatchHtml_UsesOnlyEntitiesSupportedByBergamot()
-    {
-        var html = BlockingService.BuildBatchHtml([
-            "That's",
-            "\"quoted\"",
-            "Tom & Jerry",
-            "<tag>",
-            "literal &#39;",
-        ]);
+    private static readonly string[] Inputs =
+    [
+        "Hello, world!",
+        "First line.\nSecond line.",
+        "Fish & chips <tag> > cheese.",
+        "Café and 東京.",
+    ];
 
-        Assert.Equal(
-            "<p>That's</p><p>\"quoted\"</p><p>Tom &amp; Jerry</p>" +
-            "<p>&lt;tag&gt;</p><p>literal &amp;#39;</p>",
-            html);
+    private static readonly string[] HtmlInputs =
+    [
+        "<p>Hello, <strong>world</strong>!</p>",
+        "<p>How are you?</p>",
+    ];
+
+    [Fact]
+    public void TranslateMultiple_TranslatesEachPlainTextWithOneModel()
+    {
+        using var service = new BlockingService(models.ConfigurationFor("en-kn"));
+
+        var expected = Inputs.Select(input => service.Translate(input)).ToArray();
+        var actual = service.Translate(Inputs);
+
+        Assert.Equal(expected, actual);
+        Assert.All(actual, translation => Assert.False(string.IsNullOrWhiteSpace(translation)));
+        Assert.NotEqual(Inputs[0], actual[0]);
+        Assert.Empty(service.Translate(Array.Empty<string>()));
     }
 
     [Fact]
-    public void BuildBatchHtml_ConvertsNewlinesToBreakElements()
+    public void TranslateMultiple_UsesTwoModelPivot()
     {
-        var html = BlockingService.BuildBatchHtml(["line 1\r\nline 2\nline 3"]);
+        using var service = new BlockingService(
+            models.ConfigurationFor("en-kn"),
+            models.ConfigurationFor("kn-en"));
 
-        Assert.Equal("<p>line 1<br>line 2<br>line 3</p>", html);
+        var expected = Inputs.Select(input => service.Translate(input)).ToArray();
+        var actual = service.Translate(Inputs);
+
+        Assert.Equal(expected, actual);
+        Assert.All(actual, translation => Assert.False(string.IsNullOrWhiteSpace(translation)));
+    }
+
+    [Fact]
+    public void TranslateMultiple_PreservesHtmlWithOneModel()
+    {
+        using var service = new BlockingService(models.ConfigurationFor("en-kn"));
+
+        var expected = HtmlInputs.Select(input => service.Translate(input, html: true)).ToArray();
+        var actual = service.Translate(HtmlInputs, html: true);
+
+        Assert.Equal(expected, actual);
+        Assert.Contains("<strong>", actual[0]);
+    }
+
+    [Fact]
+    public void TranslateMultiple_PreservesHtmlWithTwoModelPivot()
+    {
+        using var service = new BlockingService(
+            models.ConfigurationFor("en-kn"),
+            models.ConfigurationFor("kn-en"));
+
+        var expected = HtmlInputs.Select(input => service.Translate(input, html: true)).ToArray();
+        var actual = service.Translate(HtmlInputs, html: true);
+
+        Assert.Equal(expected, actual);
+        Assert.Contains("<strong>", actual[0]);
     }
 }

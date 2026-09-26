@@ -1,6 +1,8 @@
 #ifndef BERGAMOT_TRANSLATOR_DYNAMIC_H
 #define BERGAMOT_TRANSLATOR_DYNAMIC_H
 
+#include <stddef.h>
+
 #ifndef __cplusplus
 #include <stdbool.h>
 #endif
@@ -37,6 +39,23 @@ extern "C"
    * @return 翻訳結果（テキストは呼び出し側が解放する必要がある）
    */
   BERGAMOT_API char *translator_translate(void *translator, const char *text, bool html);
+
+  /**
+   * @brief 複数のテキストをまとめて翻訳
+   * @param translator 初期化済みトランスレーターのポインタ
+   * @param texts 翻訳するテキストの配列
+   * @param count 配列内のテキスト数（1以上）
+   * @param html 配列内の全テキストでHTMLマークアップを保持するかどうか
+   * @return 入力と同じ順序の翻訳結果配列。失敗した場合はNULL
+   * @note 結果配列と各テキストは translator_free_translations で解放する
+   */
+  BERGAMOT_API char **translator_translate_multiple(void *translator, const char **texts, size_t count, bool html);
+
+  /**
+   * @brief translator_translate_multiple が返した翻訳結果と配列を解放
+   * @param translations 解放する翻訳結果配列
+   */
+  BERGAMOT_API void translator_free_translations(char **translations);
 
   /**
    * @brief トランスレーターを解放

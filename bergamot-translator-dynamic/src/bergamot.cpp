@@ -4,6 +4,12 @@
 #include "translator/response_options.h"
 #include "translator/service.h"
 #include "translator/translation_model.h"
+#include <cstdlib>
+#include <cstring>
+#include <limits>
+#include <string>
+#include <utility>
+#include <vector>
 #ifdef _WIN32
 #include <combaseapi.h>
 #endif
@@ -13,6 +19,28 @@ using marian::bergamot::parseOptionsFromFilePath;
 using marian::bergamot::Response;
 using marian::bergamot::ResponseOptions;
 using marian::bergamot::TranslationModel;
+
+namespace
+{
+    void *allocateTranslationMemory(size_t size)
+    {
+#ifdef _WIN32
+        return CoTaskMemAlloc(size);
+#else
+        return std::malloc(size);
+#endif
+    }
+
+    void freeTranslationMemory(void *memory)
+    {
+#ifdef _WIN32
+        CoTaskMemFree(memory);
+#else
+        std::free(memory);
+#endif
+    }
+
+}
 
 // トランスレーターの状態を保持する構造体
 struct BergamotTranslatorState
@@ -113,6 +141,70 @@ extern "C"
         }
 
         return nullptr;
+    }
+
+    char **translator_translate_multiple(void *translator, const char **texts, size_t count, bool html)
+    {
+        if (!translator || !texts || count == 0 || count > std::numeric_limits<size_t>::max() / sizeof(char *))
+            return nullptr;
+
+        try
+        {
+            auto state = static_cast<BergamotTranslatorState *>(translator);
+
+            std::vector<std::string> sources;
+            sources.reserve(count);
+            for (size_t i = 0; i < count; ++i)
+            {
+                if (!texts[i])
+                    return nullptr;
+                sources.emplace_back(texts[i]);
+            }
+
+            ResponseOptions responseOptions;
+            responseOptions.HTML = html;
+            std::vector<ResponseOptions> options(count, responseOptions);
+            auto responses = state->models.size() == 1
+                ? state->service->translateMultiple(state->models[0], std::move(sources), options)
+                : state->service->pivotMultiple(state->models[0], state->models[1], std::move(sources), options);
+
+            if (responses.size() != count)
+                return nullptr;
+
+            size_t translationsSize = sizeof(char *) * count;
+            for (const auto &response : responses)
+            {
+                const size_t textSize = response.target.text.size();
+                if (textSize >= std::numeric_limits<size_t>::max() - translationsSize)
+                    return nullptr;
+                translationsSize += textSize + 1;
+            }
+
+            auto **translations = static_cast<char **>(allocateTranslationMemory(translationsSize));
+            if (!translations)
+                return nullptr;
+
+            auto *textBuffer = reinterpret_cast<char *>(translations + count);
+            for (size_t i = 0; i < count; ++i)
+            {
+                const auto &text = responses[i].target.text;
+                translations[i] = textBuffer;
+                std::memcpy(textBuffer, text.c_str(), text.size() + 1);
+                textBuffer += text.size() + 1;
+            }
+
+            return translations;
+        }
+        catch (...)
+        {
+            // Never allow a C++ exception to cross the C ABI boundary.
+            return nullptr;
+        }
+    }
+
+    void translator_free_translations(char **translations)
+    {
+        freeTranslationMemory(translations);
     }
 
     void translator_free(void *translator)

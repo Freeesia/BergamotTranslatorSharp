@@ -326,6 +326,66 @@ jobs:
           name: ${{ matrix.artifact }}
           path: libs/*
 
+  dotnet-tests:
+    runs-on: ${{ matrix.runner }}
+    name: .NET Translation Tests (${{ matrix.platform }})
+    needs:
+      - win
+      - linux
+      - macos
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-x64
+            runner: windows-latest
+            dotnet_arch: x64
+            native_artifact: libs-win
+          - platform: windows-x86
+            runner: windows-latest
+            dotnet_arch: x86
+            native_artifact: libs-win-x86
+          - platform: windows-arm64
+            runner: windows-11-arm
+            dotnet_arch: arm64
+            native_artifact: libs-win-arm64
+          - platform: linux-x64
+            runner: ubuntu-latest
+            dotnet_arch: x64
+            native_artifact: libs-linux-x64
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            dotnet_arch: arm64
+            native_artifact: libs-linux-arm64
+          - platform: macos-arm64
+            runner: macos-latest
+            dotnet_arch: arm64
+            native_artifact: libs-macos-arm64
+          - platform: macos-x64
+            runner: macos-15-intel
+            dotnet_arch: x64
+            native_artifact: libs-macos-x64
+    env:
+      BERGAMOT_TEST_MODEL_CACHE: ${{ github.workspace }}/.test-model-cache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+          architecture: ${{ matrix.dotnet_arch }}
+      - name: Cache translation models
+        uses: actions/cache@v6
+        with:
+          path: .test-model-cache
+          key: bergamot-models-${{ matrix.platform }}-${{ hashFiles('BergamotTranslatorSharp.Tests/TranslatorModelFixture.cs') }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.native_artifact }}
+          path: libs
+      - name: Run translation tests
+        run: dotnet test BergamotTranslatorSharp.Tests -c Release
+
   dotnet:
     runs-on: ubuntu-latest
     name: Build .NET Lib
@@ -333,6 +393,7 @@ jobs:
       - win
       - linux
       - macos
+      - dotnet-tests
     permissions:
       contents: write
       id-token: write
@@ -344,7 +405,6 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
-      - run: dotnet test BergamotTranslatorSharp.Tests -c Release
       - uses: gittools/actions/gitversion/setup@v4.7.0
         with:
           versionSpec: "6.2.x"

@@ -1,7 +1,5 @@
-﻿using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 
 namespace BergamotTranslatorSharp;
 
@@ -25,6 +23,17 @@ public sealed partial class BlockingService : IDisposable
         [MarshalAs(UnmanagedType.LPUTF8Str)] string text,
         [MarshalAs(UnmanagedType.I1)] bool html);
 
+    [LibraryImport("bergamot", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial IntPtr translator_translate_multiple(
+        IntPtr translator,
+        string[] texts,
+        nuint count,
+        [MarshalAs(UnmanagedType.I1)] bool html);
+
+    [DllImport("bergamot", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void translator_free_translations(IntPtr translations);
+
     public BlockingService(params string[] configPaths)
     {
         ArgumentNullException.ThrowIfNull(configPaths);
@@ -43,40 +52,40 @@ public sealed partial class BlockingService : IDisposable
         return translator_translate(translator, text, html);
     }
 
-    public string[] Translate(IEnumerable<string> texts)
+    public string[] Translate(IEnumerable<string> texts, bool html = false)
     {
         if (disposedValue)
             throw new ObjectDisposedException(nameof(BlockingService));
 
-        var textList = texts.ToList();
-        if (textList.Count == 0)
+        ArgumentNullException.ThrowIfNull(texts);
+
+        var textList = texts.ToArray();
+        if (textList.Length == 0)
             return [];
 
-        var html = BuildBatchHtml(textList);
+        if (textList.Any(static text => text is null))
+            throw new ArgumentException("Batch input cannot contain null values.", nameof(texts));
 
-        // Translate as HTML
-        var translatedHtml = Translate(html, html: true);
+        var translations = translator_translate_multiple(translator, textList, (nuint)textList.Length, html);
+        if (translations == IntPtr.Zero)
+            throw new InvalidOperationException("Failed to translate batch");
 
-        // Extract translated text from each <p> tag, convert <br> back to newlines, decode HTML entities
-        return [.. Regex.Matches(translatedHtml, @"<p>(.*?)</p>", RegexOptions.Singleline)
-            .Select(m => WebUtility.HtmlDecode(Regex.Replace(m.Groups[1].Value, @"<br\s*/?>", "\n")))];
-    }
+        try
+        {
+            var result = new string[textList.Length];
+            for (var i = 0; i < textList.Length; i++)
+            {
+                var translatedText = Marshal.ReadIntPtr(translations, i * IntPtr.Size);
+                result[i] = Marshal.PtrToStringUTF8(translatedText)
+                    ?? throw new InvalidOperationException($"Native translation result {i} is null");
+            }
 
-    internal static string BuildBatchHtml(IEnumerable<string> texts)
-    {
-        // HTML-escape each text, replace newlines with <br>, wrap in <p>
-        return string.Concat(texts.Select(t =>
-            $"<p>{EncodeHtmlText(t).Replace("\r\n", "<br>").Replace("\n", "<br>")}</p>"));
-    }
-
-    private static string EncodeHtmlText(string text)
-    {
-        // Bergamot supports named HTML entities, but not numeric entities such as
-        // &#39;. Quotes do not need escaping in an element's text content.
-        return text
-            .Replace("&", "&amp;", StringComparison.Ordinal)
-            .Replace("<", "&lt;", StringComparison.Ordinal)
-            .Replace(">", "&gt;", StringComparison.Ordinal);
+            return result;
+        }
+        finally
+        {
+            translator_free_translations(translations);
+        }
     }
 
     private void Dispose(bool disposing)
