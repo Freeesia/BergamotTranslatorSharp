@@ -242,6 +242,20 @@ dotnet run --project BergamotTranslatorSharp.Tool -- en ja "Hello, world!"
 bergamot en ja --html "<p>Hello, <strong>world</strong>!</p>"
 ```
 
+辞書を使う場合は、原語と指定訳の2列からなる UTF-8 CSV を用意し、`--dictionary` にパスを渡します。先頭の `source,target` ヘッダーは省略できます。用語にカンマ、改行、二重引用符を含める場合は CSV の引用符で囲み、引用符自体は `""` と記載します。
+
+```csv
+source,target
+Mana Reactor,マナリアクター
+Shinra,神羅
+```
+
+```bash
+bergamot en ja --dictionary terms.csv "The Mana Reactor was built by Shinra."
+```
+
+辞書指定はプレーンテキスト専用です。`--html` と同時には指定できません。重複した原語、空の原語、2列以外の行はエラーになります。
+
 使い方は `bergamot --help` で確認できます。モデルファイルがない場合や検証に失敗した場合のみ再取得します。レジストリ情報は 1 日キャッシュし、接続できないときはキャッシュを使用します。
 
 ## トラブルシューティング

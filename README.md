@@ -242,6 +242,20 @@ The arguments are source language, target language, and text. The tool prefers a
 bergamot en ja --html "<p>Hello, <strong>world</strong>!</p>"
 ```
 
+To use a terminology dictionary, provide a UTF-8 CSV with source terms in the first column and prescribed translations in the second. The `source,target` header is optional. Quote fields that contain commas, newlines, or double quotes; write a quote inside a quoted field as `""`.
+
+```csv
+source,target
+Mana Reactor,マナリアクター
+Shinra,神羅
+```
+
+```bash
+bergamot en ja --dictionary terms.csv "The Mana Reactor was built by Shinra."
+```
+
+Dictionary input is plain text only and cannot be combined with `--html`. Duplicate source terms, empty source terms, and records with a column count other than two are rejected.
+
 Run `bergamot --help` for usage. Model files are downloaded when absent or invalid. The registry metadata is cached for one day and reused if the registry cannot be reached.
 
 ## Troubleshooting
