@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>BergamotTranslatorSharp.Tool</RootNamespace>
+    <PackageId>BergamotTranslatorSharp.Tool</PackageId>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>bergamot</ToolCommandName>
+    <Description>Offline translation command line tool powered by Bergamot Translator.</Description>
+    <!-- The library project copies native files to one output path per OS; the tool keeps each RID in its own directory. -->
+    <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ConsoleAppFramework" Version="5.7.13" PrivateAssets="all" />
+    <ProjectReference Include="..\BergamotTranslatorSharp\BergamotTranslatorSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\libs\bin\win\bergamot.dll" Link="native\win-x64\bergamot.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('..\libs\bin\win\bergamot.dll')" />
+    <None Include="..\libs\bin\win-x86\bergamot.dll" Link="native\win-x86\bergamot.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('..\libs\bin\win-x86\bergamot.dll')" />
+    <None Include="..\libs\bin\win-arm64\bergamot.dll" Link="native\win-arm64\bergamot.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('..\libs\bin\win-arm64\bergamot.dll')" />
+    <None Include="..\libs\lib\linux\libbergamot.so" Link="native\linux-x64\libbergamot.so" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('..\libs\lib\linux\libbergamot.so')" />
+    <None Include="..\libs\lib\linux-arm64\libbergamot.so" Link="native\linux-arm64\libbergamot.so" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('..\libs\lib\linux-arm64\libbergamot.so')" />
+    <None Include="..\libs\arm64\lib\macos\libbergamot.dylib" Link="native\osx-arm64\libbergamot.dylib" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('..\libs\arm64\lib\macos\libbergamot.dylib')" />
+    <None Include="..\libs\x64\lib\macos\libbergamot.dylib" Link="native\osx-x64\libbergamot.dylib" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('..\libs\x64\lib\macos\libbergamot.dylib')" />
+  </ItemGroup>
+
+</Project>

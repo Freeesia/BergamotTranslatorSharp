@@ -9,5 +9,5 @@
   </Folder>
   <Project Path="BergamotTranslatorSharp/BergamotTranslatorSharp.csproj" />
   <Project Path="BergamotTranslatorSharp.Tests/BergamotTranslatorSharp.Tests.csproj" />
-  <Project Path="ManagedSample/ManagedSample.csproj" />
+  <Project Path="BergamotTranslatorSharp.Tool/BergamotTranslatorSharp.Tool.csproj" />
 </Solution>
