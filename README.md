@@ -19,6 +19,7 @@ BergamotTranslatorSharp is a C# wrapper for Bergamot Translator. It allows .NET 
 - Multi-language support
 - Fast processing
 - HTML markup preservation
+- Terminology dictionary for prescribed translations
 - Easy integration with .NET applications
 
 ## Installation
@@ -194,6 +195,23 @@ var translatedHtmlBatch = service.Translate(
     ["<p>Hello, <strong>world</strong>!</p>", "<p>How are you?</p>"],
     html: true);
 ```
+
+Pass a dictionary to prescribe translations for terms in plain text. This works for single and batch translation, including a two-model pivot chain:
+
+```cs
+var dictionary = new Dictionary<string, string>
+{
+    ["Mana Reactor"] = "マナリアクター",
+    ["Shinra"] = "神羅",
+};
+
+var translatedWithDictionary = service.Translate(
+    "The Mana Reactor was built by Shinra.", dictionary);
+var translatedBatchWithDictionary = service.Translate(
+    ["The Mana Reactor was built by Shinra.", "Shinra owns it."], dictionary);
+```
+
+Dictionary keys match exact, case-sensitive substrings. Every occurrence is replaced, and longer keys take priority when matches overlap. Empty keys are rejected. Dictionary translation accepts plain-text input; combining it with caller-provided HTML is not supported.
 
 If you pass one configuration file path, `BlockingService` uses that model directly.
 If you pass two configuration file paths, the native service uses them as a pivot translation chain.

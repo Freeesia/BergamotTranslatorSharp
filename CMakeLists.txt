@@ -85,6 +85,10 @@ function(bergamot_apply_dependency_patch repository patch_file)
   endif()
 endfunction()
 
+bergamot_apply_dependency_patch(
+  "${CMAKE_CURRENT_SOURCE_DIR}/bergamot-translator"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/patches/common/bergamot-translator.patch")
+
 if(WIN32 AND BERGAMOT_TARGET_ARM64)
   set(ARM ON CACHE BOOL "Build for ARM" FORCE)
   set(USE_MKL OFF CACHE BOOL "Compile with MKL support" FORCE)

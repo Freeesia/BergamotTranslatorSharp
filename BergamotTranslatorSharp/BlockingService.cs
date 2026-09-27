@@ -52,6 +52,18 @@ public sealed partial class BlockingService : IDisposable
         return translator_translate(translator, text, html);
     }
 
+    public string Translate(string text, IReadOnlyDictionary<string, string> dictionary)
+    {
+        if (disposedValue)
+            throw new ObjectDisposedException(nameof(BlockingService));
+
+        ArgumentNullException.ThrowIfNull(text);
+        var entries = DictionaryTranslation.Validate(dictionary);
+        var prepared = DictionaryTranslation.Prepare(text, entries);
+        return DictionaryTranslation.Restore(
+            Translate(prepared.Html, html: true), prepared.Replacements);
+    }
+
     public string[] Translate(IEnumerable<string> texts, bool html = false)
     {
         if (disposedValue)
@@ -86,6 +98,28 @@ public sealed partial class BlockingService : IDisposable
         {
             translator_free_translations(translations);
         }
+    }
+
+    public string[] Translate(
+        IEnumerable<string> texts,
+        IReadOnlyDictionary<string, string> dictionary)
+    {
+        if (disposedValue)
+            throw new ObjectDisposedException(nameof(BlockingService));
+
+        ArgumentNullException.ThrowIfNull(texts);
+        var entries = DictionaryTranslation.Validate(dictionary);
+        var textList = texts.ToArray();
+        if (textList.Any(static text => text is null))
+            throw new ArgumentException("Batch input cannot contain null values.", nameof(texts));
+        if (textList.Length == 0)
+            return [];
+
+        var prepared = textList.Select(text => DictionaryTranslation.Prepare(text, entries)).ToArray();
+        var translations = Translate(prepared.Select(item => item.Html), html: true);
+        for (var i = 0; i < translations.Length; i++)
+            translations[i] = DictionaryTranslation.Restore(translations[i], prepared[i].Replacements);
+        return translations;
     }
 
     private void Dispose(bool disposing)

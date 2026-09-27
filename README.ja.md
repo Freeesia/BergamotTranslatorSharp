@@ -19,6 +19,7 @@ BergamotTranslatorSharp は Bergamot Translator の C# ラッパーです。オ�
 - 複数言語対応
 - 高速な処理
 - HTML マークアップの保持
+- 用語辞書による指定訳の適用
 - .NET アプリケーションへの組み込み
 
 ## インストール方法
@@ -194,6 +195,23 @@ var translatedHtmlBatch = service.Translate(
     ["<p>Hello, <strong>world</strong>!</p>", "<p>How are you?</p>"],
     html: true);
 ```
+
+プレーンテキスト内の用語を指定した訳語で出力するには、辞書を渡します。単体翻訳とバッチ翻訳の両方に対応し、2 モデルのピボット翻訳でも最終結果に適用されます。
+
+```cs
+var dictionary = new Dictionary<string, string>
+{
+    ["Mana Reactor"] = "マナリアクター",
+    ["Shinra"] = "神羅",
+};
+
+var translatedWithDictionary = service.Translate(
+    "The Mana Reactor was built by Shinra.", dictionary);
+var translatedBatchWithDictionary = service.Translate(
+    ["The Mana Reactor was built by Shinra.", "Shinra owns it."], dictionary);
+```
+
+辞書キーは大文字小文字を区別する完全な文字列として検索し、複数回の出現をすべて置換します。キーが重なる場合は長いものを優先します。空文字のキーは指定できません。辞書付き翻訳の入力はプレーンテキストで、HTML 入力との併用には対応していません。
 
 コンフィグファイルパスを 1 個渡した場合、`BlockingService` はそのモデルを直接使用します。
 コンフィグファイルパスを 2 個渡した場合、ネイティブサービスはそれらをピボット翻訳チェーンとして使用します。
