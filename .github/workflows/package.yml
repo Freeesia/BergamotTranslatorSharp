@@ -166,10 +166,12 @@ jobs:
           - arch: x64
             runner: ubuntu-latest
             use_mkl: true
+            build_arch: core-avx2
             artifact: libs-linux-x64
           - arch: arm64
             runner: ubuntu-24.04-arm
             use_mkl: false
+            build_arch: native
             artifact: libs-linux-arm64
     env:
       ccache_basedir: ${{ github.workspace }}
@@ -229,7 +231,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DUSE_STATIC_LIBS=ON \
             -DUSE_MKL=${{ matrix.use_mkl }} \
-            -DBUILD_ARCH=native \
+            -DBUILD_ARCH=${{ matrix.build_arch }} \
             -DSSPLIT_USE_INTERNAL_PCRE2=ON \
             -DGIT_SUBMODULE=OFF
       - name: Build
