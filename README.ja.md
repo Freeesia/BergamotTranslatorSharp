@@ -198,33 +198,33 @@ var translatedHtmlBatch = service.Translate(
 コンフィグファイルパスを 1 個渡した場合、`BlockingService` はそのモデルを直接使用します。
 コンフィグファイルパスを 2 個渡した場合、ネイティブサービスはそれらをピボット翻訳チェーンとして使用します。
 
-### 4. ManagedSample を実行する
+### 4. .NET ツールを実行する
 
-`ManagedSample` は次の引数形式です。
-
-```text
-ManagedSample [--html] <config-paths>[..] <text>
-```
-
-最後の引数以外はすべてコンフィグファイルパスとして扱われます。最後の引数は翻訳元テキストとして扱われます。
-
-実行例:
+`BergamotTranslatorSharp.Tool` はコマンド名 `bergamot` の .NET 10 ツールです。ツールのパッケージ公開後は、.NET 10 SDK の `dnx` で取得して実行できます。
 
 ```bash
-dotnet run --project ManagedSample -- ./models/enja/config.txt "Hello, world!"
+dnx BergamotTranslatorSharp.Tool -- en ja "Hello, world!"
 ```
 
-HTML 入力では、設定ファイルの前に `--html` を追加します。
+以降の例で `bergamot` コマンドを直接使う場合は、ツールをグローバルにインストールします。
 
 ```bash
-dotnet run --project ManagedSample -- --html ./models/enja/config.txt "<p>Hello, <strong>world</strong>!</p>"
+dotnet tool install --global BergamotTranslatorSharp.Tool
 ```
 
-ピボット翻訳を行う場合は、翻訳テキストの前に 2 個のコンフィグファイルを渡します。
+このリポジトリから直接実行する場合:
 
 ```bash
-dotnet run --project ManagedSample -- ./models/source-pivot/config.txt ./models/pivot-target/config.txt "Hello, world!"
+dotnet run --project BergamotTranslatorSharp.Tool -- en ja "Hello, world!"
 ```
+
+引数は翻訳元言語、翻訳先言語、テキストの順です。Mozilla のレジストリでは `Release` モデルを優先してダウンロードし、ユーザーのアプリケーションデータディレクトリ内の `BergamotTranslatorSharp/Tool` に保存して再利用します。直接翻訳できるモデルがない場合は英語経由を試します。HTML マークアップを保持するには `--html` を付けます。
+
+```bash
+bergamot en ja --html "<p>Hello, <strong>world</strong>!</p>"
+```
+
+使い方は `bergamot --help` で確認できます。モデルファイルがない場合や検証に失敗した場合のみ再取得します。レジストリ情報は 1 日キャッシュし、接続できないときはキャッシュを使用します。
 
 ## トラブルシューティング
 

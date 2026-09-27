@@ -198,33 +198,33 @@ var translatedHtmlBatch = service.Translate(
 If you pass one configuration file path, `BlockingService` uses that model directly.
 If you pass two configuration file paths, the native service uses them as a pivot translation chain.
 
-### 4. Run the managed sample
+### 4. Run the .NET tool
 
-`ManagedSample` follows this argument format:
-
-```text
-ManagedSample [--html] <config-paths>[..] <text>
-```
-
-All arguments except the last one are treated as configuration file paths. The last argument is treated as the source text.
-
-Example:
+`BergamotTranslatorSharp.Tool` is a .NET 10 tool with the command name `bergamot`. After the tool package is published, a .NET 10 SDK can download and run it with `dnx`:
 
 ```bash
-dotnet run --project ManagedSample -- ./models/enja/config.txt "Hello, world!"
+dnx BergamotTranslatorSharp.Tool -- en ja "Hello, world!"
 ```
 
-For HTML input, add `--html` before the configuration paths:
+To use the `bergamot` command directly in the examples below, install the tool globally:
 
 ```bash
-dotnet run --project ManagedSample -- --html ./models/enja/config.txt "<p>Hello, <strong>world</strong>!</p>"
+dotnet tool install --global BergamotTranslatorSharp.Tool
 ```
 
-For pivot translation, pass two configuration files before the text:
+To run the project from this repository:
 
 ```bash
-dotnet run --project ManagedSample -- ./models/source-pivot/config.txt ./models/pivot-target/config.txt "Hello, world!"
+dotnet run --project BergamotTranslatorSharp.Tool -- en ja "Hello, world!"
 ```
+
+The arguments are source language, target language, and text. The tool prefers a `Release` model from Mozilla's registry, downloads its files, and reuses them from the user application-data directory (`BergamotTranslatorSharp/Tool`). If a direct model is unavailable, it tries translating through English. To preserve HTML markup, add `--html`:
+
+```bash
+bergamot en ja --html "<p>Hello, <strong>world</strong>!</p>"
+```
+
+Run `bergamot --help` for usage. Model files are downloaded when absent or invalid. The registry metadata is cached for one day and reused if the registry cannot be reached.
 
 ## Troubleshooting
 
