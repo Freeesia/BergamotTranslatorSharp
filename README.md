@@ -19,6 +19,7 @@ BergamotTranslatorSharp is a C# wrapper for Bergamot Translator. It allows .NET 
 - Multi-language support
 - Fast processing
 - HTML markup preservation
+- Terminology dictionary for prescribed translations
 - Easy integration with .NET applications
 
 ## Installation
@@ -195,6 +196,23 @@ var translatedHtmlBatch = service.Translate(
     html: true);
 ```
 
+Pass a dictionary to prescribe translations for terms in plain text. This works for single and batch translation, including a two-model pivot chain:
+
+```cs
+var dictionary = new Dictionary<string, string>
+{
+    ["Mana Reactor"] = "マナリアクター",
+    ["Shinra"] = "神羅",
+};
+
+var translatedWithDictionary = service.Translate(
+    "The Mana Reactor was built by Shinra.", dictionary);
+var translatedBatchWithDictionary = service.Translate(
+    ["The Mana Reactor was built by Shinra.", "Shinra owns it."], dictionary);
+```
+
+Dictionary keys match exact, case-sensitive substrings. Every occurrence is replaced, and longer keys take priority when matches overlap. Empty keys are rejected. Dictionary translation accepts plain-text input; combining it with caller-provided HTML is not supported.
+
 If you pass one configuration file path, `BlockingService` uses that model directly.
 If you pass two configuration file paths, the native service uses them as a pivot translation chain.
 
@@ -223,6 +241,20 @@ The arguments are source language, target language, and text. The tool prefers a
 ```bash
 bergamot en ja --html "<p>Hello, <strong>world</strong>!</p>"
 ```
+
+To use a terminology dictionary, provide a UTF-8 CSV with source terms in the first column and prescribed translations in the second. The `source,target` header is optional. Quote fields that contain commas, newlines, or double quotes; write a quote inside a quoted field as `""`.
+
+```csv
+source,target
+Mana Reactor,マナリアクター
+Shinra,神羅
+```
+
+```bash
+bergamot en ja --dictionary terms.csv "The Mana Reactor was built by Shinra."
+```
+
+Dictionary input is plain text only and cannot be combined with `--html`. Duplicate source terms, empty source terms, and records with a column count other than two are rejected.
 
 Run `bergamot --help` for usage. Model files are downloaded when absent or invalid. The registry metadata is cached for one day and reused if the registry cannot be reached.
 

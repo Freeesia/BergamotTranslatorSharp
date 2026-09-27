@@ -1,0 +1,10 @@
+diff --git a/src/translator/html.h b/src/translator/html.h
+index f3c6dad..527c183 100644
+--- a/src/translator/html.h
++++ b/src/translator/html.h
+@@ -81 +81 @@
+-                          "time",   "u", "var",  "wbr",   "ins",  "del",    "img"};
++                          "time",   "u", "var",  "wbr",   "ins",  "del",    "img", "bts-term"};
+@@ -89 +89 @@
+-    TagNameSet inWordTags{"wbr"};
++    TagNameSet inWordTags{"wbr", "bts-term"};

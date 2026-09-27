@@ -19,6 +19,7 @@ BergamotTranslatorSharp は Bergamot Translator の C# ラッパーです。オ�
 - 複数言語対応
 - 高速な処理
 - HTML マークアップの保持
+- 用語辞書による指定訳の適用
 - .NET アプリケーションへの組み込み
 
 ## インストール方法
@@ -195,6 +196,23 @@ var translatedHtmlBatch = service.Translate(
     html: true);
 ```
 
+プレーンテキスト内の用語を指定した訳語で出力するには、辞書を渡します。単体翻訳とバッチ翻訳の両方に対応し、2 モデルのピボット翻訳でも最終結果に適用されます。
+
+```cs
+var dictionary = new Dictionary<string, string>
+{
+    ["Mana Reactor"] = "マナリアクター",
+    ["Shinra"] = "神羅",
+};
+
+var translatedWithDictionary = service.Translate(
+    "The Mana Reactor was built by Shinra.", dictionary);
+var translatedBatchWithDictionary = service.Translate(
+    ["The Mana Reactor was built by Shinra.", "Shinra owns it."], dictionary);
+```
+
+辞書キーは大文字小文字を区別する完全な文字列として検索し、複数回の出現をすべて置換します。キーが重なる場合は長いものを優先します。空文字のキーは指定できません。辞書付き翻訳の入力はプレーンテキストで、HTML 入力との併用には対応していません。
+
 コンフィグファイルパスを 1 個渡した場合、`BlockingService` はそのモデルを直接使用します。
 コンフィグファイルパスを 2 個渡した場合、ネイティブサービスはそれらをピボット翻訳チェーンとして使用します。
 
@@ -223,6 +241,20 @@ dotnet run --project BergamotTranslatorSharp.Tool -- en ja "Hello, world!"
 ```bash
 bergamot en ja --html "<p>Hello, <strong>world</strong>!</p>"
 ```
+
+辞書を使う場合は、原語と指定訳の2列からなる UTF-8 CSV を用意し、`--dictionary` にパスを渡します。先頭の `source,target` ヘッダーは省略できます。用語にカンマ、改行、二重引用符を含める場合は CSV の引用符で囲み、引用符自体は `""` と記載します。
+
+```csv
+source,target
+Mana Reactor,マナリアクター
+Shinra,神羅
+```
+
+```bash
+bergamot en ja --dictionary terms.csv "The Mana Reactor was built by Shinra."
+```
+
+辞書指定はプレーンテキスト専用です。`--html` と同時には指定できません。重複した原語、空の原語、2列以外の行はエラーになります。
 
 使い方は `bergamot --help` で確認できます。モデルファイルがない場合や検証に失敗した場合のみ再取得します。レジストリ情報は 1 日キャッシュし、接続できないときはキャッシュを使用します。
 

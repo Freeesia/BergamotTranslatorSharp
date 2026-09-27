@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BergamotTranslatorSharp\BergamotTranslatorSharp.csproj" />
+    <ProjectReference Include="..\BergamotTranslatorSharp.Tool\BergamotTranslatorSharp.Tool.csproj" />
   </ItemGroup>
 
 </Project>
