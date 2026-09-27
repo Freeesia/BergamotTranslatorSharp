@@ -9,14 +9,11 @@ public sealed class TermDictionaryCsvTests
     [Fact]
     public void Load_ParsesUtf8BomAndQuotedFields()
     {
-        var terms = ReadCsv("""
-            source,target
-            "New,York","ニュー,ヨーク"
-            "multi
-            line","複数
-            行"
-            "quote""name","訳""語"
-            """);
+        var terms = ReadCsv(
+            "source,target\n" +
+            "\"New,York\",\"ニュー,ヨーク\"\n" +
+            "\"multi\nline\",\"複数\n行\"\n" +
+            "\"quote\"\"name\",\"訳\"\"語\"");
 
         Assert.Equal("ニュー,ヨーク", terms["New,York"]);
         Assert.Equal("複数\n行", terms["multi\nline"]);
