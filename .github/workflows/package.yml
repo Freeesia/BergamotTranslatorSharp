@@ -420,6 +420,11 @@ jobs:
             -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} \
             -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} \
             -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
+          dotnet pack BergamotTranslatorSharp.Tool -c Release -o pack \
+            -p:Version=${{ steps.gitversion.outputs.fullSemVer }} \
+            -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} \
+            -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} \
+            -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
       - uses: actions/upload-artifact@v7
         with:
           name: nupkg
@@ -432,7 +437,10 @@ jobs:
           user: Freesia
       - name: NuGet push
         if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
-        run: dotnet nuget push pack/*.nupkg --api-key ${{ steps.nuget_login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: |
+          for package in pack/*.nupkg; do
+            dotnet nuget push "$package" --api-key ${{ steps.nuget_login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          done
       - if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
         uses: softprops/action-gh-release@v3
         with:
