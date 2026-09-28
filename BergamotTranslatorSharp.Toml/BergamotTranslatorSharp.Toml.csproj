@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>BergamotTranslatorSharp.Toml</PackageId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Tomlyn" />
+    <ProjectReference Include="..\BergamotTranslatorSharp\BergamotTranslatorSharp.csproj" />
+  </ItemGroup>
+</Project>

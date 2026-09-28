@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>BergamotTranslatorSharp.Json</PackageId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BergamotTranslatorSharp\BergamotTranslatorSharp.csproj" />
+  </ItemGroup>
+</Project>

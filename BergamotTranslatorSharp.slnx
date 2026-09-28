@@ -6,8 +6,12 @@
   </Configurations>
   <Folder Name="/!SolutionItems/">
     <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
   </Folder>
   <Project Path="BergamotTranslatorSharp/BergamotTranslatorSharp.csproj" />
+  <Project Path="BergamotTranslatorSharp.Json/BergamotTranslatorSharp.Json.csproj" />
   <Project Path="BergamotTranslatorSharp.Tests/BergamotTranslatorSharp.Tests.csproj" />
+  <Project Path="BergamotTranslatorSharp.Toml/BergamotTranslatorSharp.Toml.csproj" />
   <Project Path="BergamotTranslatorSharp.Tool/BergamotTranslatorSharp.Tool.csproj" />
+  <Project Path="BergamotTranslatorSharp.Yaml/BergamotTranslatorSharp.Yaml.csproj" />
 </Solution>
