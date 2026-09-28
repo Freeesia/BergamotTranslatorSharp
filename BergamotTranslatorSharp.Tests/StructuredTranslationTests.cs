@@ -6,7 +6,8 @@ using Xunit;
 
 namespace BergamotTranslatorSharp.Tests;
 
-public sealed class StructuredTranslationTests(TranslatorModelFixture models) : IClassFixture<TranslatorModelFixture>
+[Collection(nameof(TranslatorModelCollection))]
+public sealed class StructuredTranslationTests(TranslatorModelFixture models)
 {
     private static readonly Dictionary<string, string> Dictionary = new()
     {
