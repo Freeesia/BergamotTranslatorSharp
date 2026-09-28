@@ -2,7 +2,8 @@ using Xunit;
 
 namespace BergamotTranslatorSharp.Tests;
 
-public sealed class BlockingServiceTests(TranslatorModelFixture models) : IClassFixture<TranslatorModelFixture>
+[Collection(nameof(TranslatorModelCollection))]
+public sealed class BlockingServiceTests(TranslatorModelFixture models)
 {
     private static readonly string[] Inputs =
     [
