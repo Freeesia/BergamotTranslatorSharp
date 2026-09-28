@@ -10,9 +10,7 @@ updates:
       timezone: "Asia/Tokyo"
 
   - package-ecosystem: "nuget"
-    directories:
-      - "/BergamotTranslatorSharp"
-      - "/BergamotTranslatorSharp.Tool"
+    directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"

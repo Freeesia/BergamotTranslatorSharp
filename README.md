@@ -20,6 +20,7 @@ BergamotTranslatorSharp is a C# wrapper for Bergamot Translator. It allows .NET 
 - Fast processing
 - HTML markup preservation
 - Terminology dictionary for prescribed translations
+- Translation of JSON, YAML, and TOML string values
 - Easy integration with .NET applications
 
 ## Installation
@@ -212,6 +213,26 @@ var translatedBatchWithDictionary = service.Translate(
 ```
 
 Dictionary keys match exact, case-sensitive substrings. Every occurrence is replaced, and longer keys take priority when matches overlap. Empty keys are rejected. Dictionary translation accepts plain-text input; combining it with caller-provided HTML is not supported.
+
+To translate JSON, YAML, or TOML values, add the package for each format you use. Each package depends only on the core library; the YAML and TOML packages do not depend on the JSON package.
+
+```bash
+dotnet add package BergamotTranslatorSharp.Json
+dotnet add package BergamotTranslatorSharp.Yaml
+dotnet add package BergamotTranslatorSharp.Toml
+```
+
+```cs
+using BergamotTranslatorSharp.Json;
+using BergamotTranslatorSharp.Yaml;
+using BergamotTranslatorSharp.Toml;
+
+var json = service.TranslateJson("""{"title":"Hello, world!","count":1}""", dictionary);
+var yaml = service.TranslateYaml("title: Hello, world!\ncount: 1\n", dictionary);
+var toml = service.TranslateToml("title = 'Hello, world!'\ncount = 1\n", dictionary);
+```
+
+The dictionary is optional. Keys, numbers, booleans, nulls, empty strings, and whitespace-only strings are not translated. Each selected string value is translated separately as plain text. For another data format, implement the core `ITranslatableDocument<T>` interface and call `service.Translate(document, dictionary)`.
 
 If you pass one configuration file path, `BlockingService` uses that model directly.
 If you pass two configuration file paths, the native service uses them as a pivot translation chain.

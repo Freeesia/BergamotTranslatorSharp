@@ -20,6 +20,7 @@ BergamotTranslatorSharp は Bergamot Translator の C# ラッパーです。オ�
 - 高速な処理
 - HTML マークアップの保持
 - 用語辞書による指定訳の適用
+- JSON・YAML・TOML の文字列値の翻訳
 - .NET アプリケーションへの組み込み
 
 ## インストール方法
@@ -212,6 +213,26 @@ var translatedBatchWithDictionary = service.Translate(
 ```
 
 辞書キーは大文字小文字を区別する完全な文字列として検索し、複数回の出現をすべて置換します。キーが重なる場合は長いものを優先します。空文字のキーは指定できません。辞書付き翻訳の入力はプレーンテキストで、HTML 入力との併用には対応していません。
+
+JSON・YAML・TOML の値を翻訳する場合は、必要な形式のパッケージを追加します。各パッケージは本体だけに依存し、YAML と TOML は JSON パッケージに依存しません。
+
+```bash
+dotnet add package BergamotTranslatorSharp.Json
+dotnet add package BergamotTranslatorSharp.Yaml
+dotnet add package BergamotTranslatorSharp.Toml
+```
+
+```cs
+using BergamotTranslatorSharp.Json;
+using BergamotTranslatorSharp.Yaml;
+using BergamotTranslatorSharp.Toml;
+
+var json = service.TranslateJson("""{"title":"Hello, world!","count":1}""", dictionary);
+var yaml = service.TranslateYaml("title: Hello, world!\ncount: 1\n", dictionary);
+var toml = service.TranslateToml("title = 'Hello, world!'\ncount = 1\n", dictionary);
+```
+
+辞書は省略できます。キー、数値、真偽値、null、空文字列、空白だけの文字列は翻訳しません。各文字列値はプレーンテキストとして個別に翻訳します。独自のデータ構造を扱う場合は、本体の `ITranslatableDocument<T>` を実装し、`service.Translate(document, dictionary)` を呼び出せます。
 
 コンフィグファイルパスを 1 個渡した場合、`BlockingService` はそのモデルを直接使用します。
 コンフィグファイルパスを 2 個渡した場合、ネイティブサービスはそれらをピボット翻訳チェーンとして使用します。
