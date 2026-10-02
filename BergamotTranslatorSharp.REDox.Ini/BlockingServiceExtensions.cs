@@ -1,3 +1,5 @@
+using REDox.Ini;
+
 namespace BergamotTranslatorSharp.REDox.Ini;
 
 public static class BlockingServiceExtensions
@@ -9,6 +11,11 @@ public static class BlockingServiceExtensions
         IReadOnlyDictionary<string, string>? dictionary = null)
     {
         ArgumentNullException.ThrowIfNull(service);
-        return service.Translate(new IniTranslationDocument(ini), dictionary);
+        ArgumentNullException.ThrowIfNull(ini);
+        var document = new RedoxTranslationDocument<string, string>(
+            ini,
+            static source => IniDocument.Parse(source, options: new IniDocumentOptions { PreserveTrivia = true }),
+            static root => IniDocument.EncodeToString(root, new IniWriteOptions { PreserveTrivia = true }));
+        return service.Translate(document, dictionary);
     }
 }

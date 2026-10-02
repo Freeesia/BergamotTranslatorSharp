@@ -2,15 +2,12 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using BergamotTranslatorSharp.Json;
 using BergamotTranslatorSharp.REDox;
-using BergamotTranslatorSharp.REDox.Cbor;
-using BergamotTranslatorSharp.REDox.Ini;
-using BergamotTranslatorSharp.REDox.Json5;
-using BergamotTranslatorSharp.REDox.MessagePack;
 using BergamotTranslatorSharp.Toml;
 using BergamotTranslatorSharp.Yaml;
 using REDox;
 using REDox.Cbor;
 using REDox.Json;
+using REDox.Ini;
 using REDox.MessagePack;
 using Tomlyn.Parsing;
 using Xunit;
@@ -57,7 +54,14 @@ public sealed class StructuredDocumentTests
               whitespace: '  ',
             }
             """;
-        var document = new Json5TranslationDocument(json5);
+        var document = new RedoxTranslationDocument<string, string>(
+            json5,
+            static source => Json5Document.Parse(source, options: new Json5DocumentOptions { PreserveTrivia = true }),
+            static root => Json5Document.EncodeToString(root, new Json5WriteOptions
+            {
+                PreserveTrivia = true,
+                StringStyle = Json5QuoteStyle.PreserveOrSingle,
+            }));
 
         Assert.Equal(["Hello", "World"], document.Values);
         var result = document.Restore(["Bonjour", "Monde"]);
@@ -74,7 +78,10 @@ public sealed class StructuredDocumentTests
     [Fact]
     public void Ini_TranslatesValuesButNotKeys()
     {
-        var document = new IniTranslationDocument("# heading\n[app]\ntitle=Hello\ncount=42\n");
+        var document = new RedoxTranslationDocument<string, string>(
+            "# heading\n[app]\ntitle=Hello\ncount=42\n",
+            static source => IniDocument.Parse(source, options: new IniDocumentOptions { PreserveTrivia = true }),
+            static root => IniDocument.EncodeToString(root, new IniWriteOptions { PreserveTrivia = true }));
 
         Assert.Equal(["Hello", "42"], document.Values);
         var result = document.Restore(["Bonjour", "42"]);
@@ -99,7 +106,10 @@ public sealed class StructuredDocumentTests
             ["binary"] = DValue.Create(new byte[] { 1, 2 }),
             ["array"] = new DArray { "World", true },
         });
-        var document = new CborTranslationDocument(source);
+        var document = new RedoxTranslationDocument<byte[], byte[]>(
+            source,
+            static input => CborDocument.Parse(input),
+            static root => CborDocument.Encode(root));
 
         Assert.Equal(["Still not translated", "Hello", "World"], document.Values);
         using var result = CborDocument.Parse(document.Restore(["Still not translated", "Bonjour", "Monde"]));
@@ -127,7 +137,10 @@ public sealed class StructuredDocumentTests
             ["binary"] = DValue.Create(new byte[] { 1, 2 }),
             ["array"] = new DArray { "World", true },
         });
-        var document = new MessagePackTranslationDocument(source);
+        var document = new RedoxTranslationDocument<byte[], byte[]>(
+            source,
+            static input => MessagePackDocument.Parse(input),
+            static root => MessagePackDocument.Encode(root));
 
         Assert.Equal(["Still not translated", "Hello", "World"], document.Values);
         using var result = MessagePackDocument.Parse(document.Restore(["Still not translated", "Bonjour", "Monde"]));

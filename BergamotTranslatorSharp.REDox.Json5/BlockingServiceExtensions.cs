@@ -1,3 +1,5 @@
+using REDox.Json;
+
 namespace BergamotTranslatorSharp.REDox.Json5;
 
 public static class BlockingServiceExtensions
@@ -9,6 +11,15 @@ public static class BlockingServiceExtensions
         IReadOnlyDictionary<string, string>? dictionary = null)
     {
         ArgumentNullException.ThrowIfNull(service);
-        return service.Translate(new Json5TranslationDocument(json5), dictionary);
+        ArgumentNullException.ThrowIfNull(json5);
+        var document = new RedoxTranslationDocument<string, string>(
+            json5,
+            static source => Json5Document.Parse(source, options: new Json5DocumentOptions { PreserveTrivia = true }),
+            static root => Json5Document.EncodeToString(root, new Json5WriteOptions
+            {
+                PreserveTrivia = true,
+                StringStyle = Json5QuoteStyle.PreserveOrSingle,
+            }));
+        return service.Translate(document, dictionary);
     }
 }

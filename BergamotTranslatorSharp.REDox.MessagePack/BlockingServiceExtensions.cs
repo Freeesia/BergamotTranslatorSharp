@@ -1,3 +1,5 @@
+using REDox.MessagePack;
+
 namespace BergamotTranslatorSharp.REDox.MessagePack;
 
 public static class BlockingServiceExtensions
@@ -9,6 +11,11 @@ public static class BlockingServiceExtensions
         IReadOnlyDictionary<string, string>? dictionary = null)
     {
         ArgumentNullException.ThrowIfNull(service);
-        return service.Translate(new MessagePackTranslationDocument(messagePack), dictionary);
+        ArgumentNullException.ThrowIfNull(messagePack);
+        var document = new RedoxTranslationDocument<byte[], byte[]>(
+            messagePack.ToArray(),
+            static source => MessagePackDocument.Parse(source),
+            static root => MessagePackDocument.Encode(root));
+        return service.Translate(document, dictionary);
     }
 }

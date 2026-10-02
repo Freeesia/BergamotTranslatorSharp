@@ -1,3 +1,5 @@
+using REDox.Cbor;
+
 namespace BergamotTranslatorSharp.REDox.Cbor;
 
 public static class BlockingServiceExtensions
@@ -9,6 +11,11 @@ public static class BlockingServiceExtensions
         IReadOnlyDictionary<string, string>? dictionary = null)
     {
         ArgumentNullException.ThrowIfNull(service);
-        return service.Translate(new CborTranslationDocument(cbor), dictionary);
+        ArgumentNullException.ThrowIfNull(cbor);
+        var document = new RedoxTranslationDocument<byte[], byte[]>(
+            cbor.ToArray(),
+            static source => CborDocument.Parse(source),
+            static root => CborDocument.Encode(root));
+        return service.Translate(document, dictionary);
     }
 }
