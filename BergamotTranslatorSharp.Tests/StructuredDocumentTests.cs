@@ -17,6 +17,30 @@ namespace BergamotTranslatorSharp.Tests;
 public sealed class StructuredDocumentTests
 {
     [Fact]
+    public void RedoxElement_RestoresTranslationsIntoIndependentClones()
+    {
+        RedoxElementTranslationDocument document;
+        DElement translated;
+        using (var source = Json5Document.Parse(
+            "{ title: 'Hello', nested: { key: 'World' }, empty: '' }"))
+        {
+            document = new RedoxElementTranslationDocument(source.RootElement);
+            Assert.Equal(["Hello", "World"], document.Values);
+            Assert.Equal("Hello", source.RootElement.GetProperty("title").GetString());
+            translated = document.Restore(["Bonjour", "Monde"]);
+            Assert.Equal("Hello", source.RootElement.GetProperty("title").GetString());
+        }
+
+        Assert.Equal("Bonjour", translated.GetProperty("title").GetString());
+        Assert.Equal("Monde", translated.GetProperty("nested").GetProperty("key").GetString());
+        Assert.Equal("", translated.GetProperty("empty").GetString());
+
+        var secondTranslation = document.Restore(["Salut", "Terre"]);
+        Assert.Equal("Salut", secondTranslation.GetProperty("title").GetString());
+        Assert.Equal("Bonjour", translated.GetProperty("title").GetString());
+    }
+
+    [Fact]
     public void Json5_RestoresOnlyNonblankStringValuesAndPreservesTrivia()
     {
         const string json5 = """

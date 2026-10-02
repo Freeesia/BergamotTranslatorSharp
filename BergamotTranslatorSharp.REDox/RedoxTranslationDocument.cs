@@ -31,9 +31,20 @@ internal sealed class RedoxTranslationDocument<TInput, TOutput>(
     private static IReadOnlyList<string> ReadValues(TInput input, Func<TInput, Document> parse)
     {
         using var document = parse(input);
-        var targets = new List<DElement>();
-        Collect(document.RootElement, targets);
+        return GetValues(document.RootElement);
+    }
+
+    internal static IReadOnlyList<string> GetValues(DElement element)
+    {
+        var targets = GetTargets(element);
         return targets.Select(static target => target.GetString()!).ToArray();
+    }
+
+    internal static List<DElement> GetTargets(DElement element)
+    {
+        var values = new List<DElement>();
+        Collect(element, values);
+        return values;
     }
 
     private static void Collect(DElement element, List<DElement> values)
