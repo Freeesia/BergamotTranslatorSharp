@@ -6,42 +6,31 @@ namespace BergamotTranslatorSharp.Tests;
 public sealed class FileTranslationTests
 {
     [Theory]
-    [InlineData("input.json", null, "Json")]
-    [InlineData("input.json5", null, "Json5")]
-    [InlineData("input.yaml", null, "Yaml")]
-    [InlineData("input.yml", null, "Yaml")]
-    [InlineData("input.toml", null, "Toml")]
-    [InlineData("input.ini", null, "Ini")]
-    [InlineData("input.html", null, "Html")]
-    [InlineData("input.htm", null, "Html")]
-    [InlineData("input.cbor", null, "Cbor")]
-    [InlineData("input.msgpack", null, "MessagePack")]
-    [InlineData("input.mpk", null, "MessagePack")]
-    public void ResolveFormat_UsesSupportedFileExtensions(string path, string? format, string expected)
+    [InlineData("input.json", "Json")]
+    [InlineData("input.json5", "Json5")]
+    [InlineData("input.yaml", "Yaml")]
+    [InlineData("input.yml", "Yaml")]
+    [InlineData("input.toml", "Toml")]
+    [InlineData("input.ini", "Ini")]
+    [InlineData("input.cbor", "Cbor")]
+    [InlineData("input.msgpack", "MessagePack")]
+    [InlineData("input.mpk", "MessagePack")]
+    public void ResolveFormat_UsesSupportedFileExtensions(string path, string expected)
     {
-        Assert.Equal(expected, FileTranslation.ResolveFormat(path, format).ToString());
+        Assert.Equal(expected, FileTranslation.ResolveFormat(path).ToString());
     }
 
     [Theory]
-    [InlineData("anything.bin", "json", "Json")]
-    [InlineData("anything.conf", "yml", "Yaml")]
-    [InlineData("anything.dat", "htm", "Html")]
-    [InlineData("anything.dat", "msgpack", "MessagePack")]
-    public void ResolveFormat_ExplicitFormatOverridesExtension(string path, string format, string expected)
+    [InlineData("input.bin")]
+    [InlineData("input.dat")]
+    [InlineData("input.conf")]
+    [InlineData("input.cfg")]
+    [InlineData("input.csv")]
+    [InlineData("input.xml")]
+    [InlineData("input.html")]
+    [InlineData("input.htm")]
+    public void ResolveFormat_RejectsUnknownOrAmbiguousFormats(string path)
     {
-        Assert.Equal(expected, FileTranslation.ResolveFormat(path, format).ToString());
-    }
-
-    [Theory]
-    [InlineData("input.bin", null)]
-    [InlineData("input.dat", null)]
-    [InlineData("input.conf", null)]
-    [InlineData("input.cfg", null)]
-    [InlineData("input.csv", null)]
-    [InlineData("input.xml", null)]
-    [InlineData("input.json", "xml")]
-    public void ResolveFormat_RejectsUnknownOrAmbiguousFormats(string path, string? format)
-    {
-        Assert.Throws<ArgumentException>(() => FileTranslation.ResolveFormat(path, format));
+        Assert.Throws<ArgumentException>(() => FileTranslation.ResolveFormat(path));
     }
 }
