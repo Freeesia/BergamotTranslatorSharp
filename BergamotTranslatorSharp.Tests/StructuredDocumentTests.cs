@@ -1,8 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using BergamotTranslatorSharp.Json;
+using BergamotTranslatorSharp.REDox;
 using BergamotTranslatorSharp.Toml;
 using BergamotTranslatorSharp.Yaml;
+using REDox;
+using REDox.Cbor;
+using REDox.Json;
+using REDox.MessagePack;
 using Tomlyn.Parsing;
 using Xunit;
 using YamlDotNet.RepresentationModel;
@@ -11,6 +16,103 @@ namespace BergamotTranslatorSharp.Tests;
 
 public sealed class StructuredDocumentTests
 {
+    [Fact]
+    public void Json5_RestoresOnlyNonblankStringValuesAndPreservesTrivia()
+    {
+        const string json5 = """
+            {
+              // heading
+              title: 'Hello',
+              HelloKey: '',
+              nested: { key: 'World', count: 42 },
+              empty: '',
+              whitespace: '  ',
+            }
+            """;
+        var document = new Json5TranslationDocument(json5);
+
+        Assert.Equal(["Hello", "World"], document.Values);
+        var result = document.Restore(["Bonjour", "Monde"]);
+        Assert.Contains("// heading", result);
+        Assert.Contains("title: 'Bonjour'", result);
+        Assert.Contains("HelloKey: ''", result);
+        Assert.Contains("key: 'Monde'", result);
+        Assert.Contains("count: 42", result);
+        Assert.Contains("empty: ''", result);
+        Assert.Contains("whitespace: '  '", result);
+        Assert.Throws<InvalidDataException>(() => document.Restore(["only one"]));
+    }
+
+    [Fact]
+    public void Ini_TranslatesValuesButNotKeys()
+    {
+        var document = new IniTranslationDocument("# heading\n[app]\ntitle=Hello\ncount=42\n");
+
+        Assert.Equal(["Hello", "42"], document.Values);
+        var result = document.Restore(["Bonjour", "42"]);
+        Assert.Contains("# heading", result);
+        Assert.Contains("title", result);
+        Assert.Contains("Bonjour", result);
+        Assert.Contains("count", result);
+        Assert.Throws<InvalidDataException>(() => document.Restore(["only one"]));
+    }
+
+    [Fact]
+    public void Cbor_TranslatesOnlyStringValues()
+    {
+        var source = CborDocument.Encode(new DObject
+        {
+            ["Not translated"] = "Still not translated",
+            ["key"] = "Hello",
+            ["count"] = 42,
+            ["empty"] = "",
+            ["whitespace"] = "  ",
+            ["null"] = DValue.Create((object?)null),
+            ["binary"] = DValue.Create(new byte[] { 1, 2 }),
+            ["array"] = new DArray { "World", true },
+        });
+        var document = new CborTranslationDocument(source);
+
+        Assert.Equal(["Still not translated", "Hello", "World"], document.Values);
+        using var result = CborDocument.Parse(document.Restore(["Still not translated", "Bonjour", "Monde"]));
+        Assert.Equal("Bonjour", result.RootElement.GetProperty("key").GetString());
+        Assert.Equal(42, result.RootElement.GetProperty("count").GetInt32());
+        Assert.Equal("", result.RootElement.GetProperty("empty").GetString());
+        Assert.Equal("  ", result.RootElement.GetProperty("whitespace").GetString());
+        Assert.Null(result.RootElement.GetProperty("null").GetString());
+        Assert.Equal(new byte[] { 1, 2 }, result.RootElement.GetProperty("binary").GetByteString().ToArray());
+        Assert.Equal("Monde", result.RootElement.GetProperty("array").AsArray()[0].AsElement().GetString());
+        Assert.Throws<InvalidDataException>(() => document.Restore(["only one"]));
+    }
+
+    [Fact]
+    public void MessagePack_TranslatesOnlyStringValues()
+    {
+        var source = MessagePackDocument.Encode(new DObject
+        {
+            ["Not translated"] = "Still not translated",
+            ["key"] = "Hello",
+            ["count"] = 42,
+            ["empty"] = "",
+            ["whitespace"] = "  ",
+            ["null"] = DValue.Create((object?)null),
+            ["binary"] = DValue.Create(new byte[] { 1, 2 }),
+            ["array"] = new DArray { "World", true },
+        });
+        var document = new MessagePackTranslationDocument(source);
+
+        Assert.Equal(["Still not translated", "Hello", "World"], document.Values);
+        using var result = MessagePackDocument.Parse(document.Restore(["Still not translated", "Bonjour", "Monde"]));
+        Assert.Equal("Bonjour", result.RootElement.GetProperty("key").GetString());
+        Assert.Equal(42, result.RootElement.GetProperty("count").GetInt32());
+        Assert.Equal("", result.RootElement.GetProperty("empty").GetString());
+        Assert.Equal("  ", result.RootElement.GetProperty("whitespace").GetString());
+        Assert.Null(result.RootElement.GetProperty("null").GetString());
+        Assert.Equal(new byte[] { 1, 2 }, result.RootElement.GetProperty("binary").GetByteString().ToArray());
+        Assert.Equal("Monde", result.RootElement.GetProperty("array").AsArray()[0].AsElement().GetString());
+        Assert.Throws<InvalidDataException>(() => document.Restore(["only one"]));
+    }
+
     [Fact]
     public void Json_RestoresOnlyNonblankStringValues()
     {

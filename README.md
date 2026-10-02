@@ -20,7 +20,7 @@ BergamotTranslatorSharp is a C# wrapper for Bergamot Translator. It allows .NET 
 - Fast processing
 - HTML markup preservation
 - Terminology dictionary for prescribed translations
-- Translation of JSON, YAML, and TOML string values
+- Translation of JSON, YAML, TOML, JSON5, INI, CBOR, and MessagePack string values
 - Easy integration with .NET applications
 
 ## Installation
@@ -233,6 +233,23 @@ var toml = service.TranslateToml("title = 'Hello, world!'\ncount = 1\n", diction
 ```
 
 The dictionary is optional. Keys, numbers, booleans, nulls, empty strings, and whitespace-only strings are not translated. Each selected string value is translated separately as plain text. For another data format, implement the core `ITranslatableDocument<T>` interface and call `service.Translate(document, dictionary)`.
+
+For JSON5, INI, CBOR, or MessagePack, install `BergamotTranslatorSharp.REDox` (which targets .NET 10). Its dependencies `CAPCOM.REDox`, `CAPCOM.REDox.Cbor`, `CAPCOM.REDox.Ini`, and `CAPCOM.REDox.MessagePack` are Apache-2.0 licensed ([REDox](https://github.com/CAPCOM-TD-OSS/REDox)).
+
+```bash
+dotnet add package BergamotTranslatorSharp.REDox
+```
+
+```cs
+using BergamotTranslatorSharp.REDox;
+
+var json5 = service.TranslateJson5("{ title: 'Hello, world!' }", dictionary);
+var ini = service.TranslateIni("title=Hello, world!", dictionary);
+var translatedCbor = service.TranslateCbor(cborBytes, dictionary);
+var translatedMessagePack = service.TranslateMessagePack(messagePackBytes, dictionary);
+```
+
+JSON5 comments and trivia are preserved; INI trivia is preserved where REDox exposes it. The REDox document handlers translate nonblank string values, not map keys or non-string values.
 
 If you pass one configuration file path, `BlockingService` uses that model directly.
 If you pass two configuration file paths, the native service uses them as a pivot translation chain.
