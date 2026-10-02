@@ -55,6 +55,8 @@ static async Task<int> TranslateAsync(
         var resolvedFormat = file is null
             ? format
             : format ?? FileTranslation.ResolveFormat(file);
+        if (file is not null && resolvedFormat == TranslationFormat.Html && dictionary is not null)
+            throw new ArgumentException("HTML file translation cannot be combined with --dictionary.");
         var terms = dictionary is null ? null : TermDictionaryCsv.Load(dictionary);
 
         var configurations = await new ModelStore()
@@ -89,6 +91,16 @@ static async Task<int> TranslateAsync(
             else
             {
                 var input = await File.ReadAllTextAsync(file, cancellationToken);
+                if (resolvedFormat == TranslationFormat.Html)
+                {
+                    var htmlTranslation = service.Translate(input, html: true);
+                    if (output is null)
+                        Console.Write(htmlTranslation);
+                    else
+                        await File.WriteAllTextAsync(output, htmlTranslation, cancellationToken);
+                    return 0;
+                }
+
                 var translated = resolvedFormat switch
                 {
                     TranslationFormat.Json => service.Translate(new JsonTranslationDocument(input), terms),

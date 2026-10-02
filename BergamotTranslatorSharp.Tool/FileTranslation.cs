@@ -7,6 +7,7 @@ internal enum TranslationFormat
     Yaml,
     Toml,
     Ini,
+    Html,
     Cbor,
     MessagePack,
 }
@@ -25,6 +26,7 @@ internal static class FileTranslation
             ".yaml" or ".yml" => TranslationFormat.Yaml,
             ".toml" => TranslationFormat.Toml,
             ".ini" => TranslationFormat.Ini,
+            ".html" or ".htm" => TranslationFormat.Html,
             ".cbor" => TranslationFormat.Cbor,
             ".msgpack" or ".mpk" => TranslationFormat.MessagePack,
             _ => throw new ArgumentException(

@@ -12,6 +12,8 @@ public sealed class FileTranslationTests
     [InlineData("input.yml", "Yaml")]
     [InlineData("input.toml", "Toml")]
     [InlineData("input.ini", "Ini")]
+    [InlineData("input.html", "Html")]
+    [InlineData("input.htm", "Html")]
     [InlineData("input.cbor", "Cbor")]
     [InlineData("input.msgpack", "MessagePack")]
     [InlineData("input.mpk", "MessagePack")]
@@ -27,8 +29,6 @@ public sealed class FileTranslationTests
     [InlineData("input.cfg")]
     [InlineData("input.csv")]
     [InlineData("input.xml")]
-    [InlineData("input.html")]
-    [InlineData("input.htm")]
     public void ResolveFormat_RejectsUnknownOrAmbiguousFormats(string path)
     {
         Assert.Throws<ArgumentException>(() => FileTranslation.ResolveFormat(path));
