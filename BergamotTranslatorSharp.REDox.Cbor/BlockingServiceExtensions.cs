@@ -13,7 +13,7 @@ public static class BlockingServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(cbor);
         var document = new RedoxTranslationDocument<byte[], byte[]>(
-            cbor.ToArray(),
+            cbor,
             static source => CborDocument.Parse(source),
             static root => CborDocument.Encode(root));
         return service.Translate(document, dictionary);

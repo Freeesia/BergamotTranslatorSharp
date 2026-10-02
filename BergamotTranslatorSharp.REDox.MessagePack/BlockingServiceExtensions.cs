@@ -13,7 +13,7 @@ public static class BlockingServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(messagePack);
         var document = new RedoxTranslationDocument<byte[], byte[]>(
-            messagePack.ToArray(),
+            messagePack,
             static source => MessagePackDocument.Parse(source),
             static root => MessagePackDocument.Encode(root));
         return service.Translate(document, dictionary);
