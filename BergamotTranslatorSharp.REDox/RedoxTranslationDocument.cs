@@ -2,12 +2,28 @@ using REDox;
 
 namespace BergamotTranslatorSharp.REDox;
 
-internal sealed class RedoxTranslationDocument<TInput, TOutput>(
-    TInput input,
-    Func<TInput, Document> parse,
-    Func<DElement, TOutput> encode) : ITranslatableDocument<TOutput>
+/// <summary>Adapts a REDox parser and encoder to the structured-document translation pipeline.</summary>
+public sealed class RedoxTranslationDocument<TInput, TOutput> : ITranslatableDocument<TOutput>
 {
-    public IReadOnlyList<string> Values { get; } = ReadValues(input, parse);
+    private readonly TInput input;
+    private readonly Func<TInput, Document> parse;
+    private readonly Func<DElement, TOutput> encode;
+
+    /// <summary>Creates an adapter over the input and its REDox parse and encode operations.</summary>
+    public RedoxTranslationDocument(
+        TInput input,
+        Func<TInput, Document> parse,
+        Func<DElement, TOutput> encode)
+    {
+        ArgumentNullException.ThrowIfNull(parse);
+        ArgumentNullException.ThrowIfNull(encode);
+        this.input = input;
+        this.parse = parse;
+        this.encode = encode;
+        Values = ReadValues(input, parse);
+    }
+
+    public IReadOnlyList<string> Values { get; }
 
     public TOutput Restore(IReadOnlyList<string> translations)
     {

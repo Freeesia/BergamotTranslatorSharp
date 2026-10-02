@@ -234,13 +234,21 @@ var toml = service.TranslateToml("title = 'Hello, world!'\ncount = 1\n", diction
 
 The dictionary is optional. Keys, numbers, booleans, nulls, empty strings, and whitespace-only strings are not translated. Each selected string value is translated separately as plain text. For another data format, implement the core `ITranslatableDocument<T>` interface and call `service.Translate(document, dictionary)`.
 
-For JSON5, INI, CBOR, or MessagePack, install `BergamotTranslatorSharp.REDox` (which targets .NET 10). Its dependencies `CAPCOM.REDox`, `CAPCOM.REDox.Cbor`, `CAPCOM.REDox.Ini`, and `CAPCOM.REDox.MessagePack` are Apache-2.0 licensed ([REDox](https://github.com/CAPCOM-TD-OSS/REDox)).
+For JSON5, INI, CBOR, or MessagePack, install the matching .NET 10 package. Each format package has a dependency on its corresponding REDox parser package; `BergamotTranslatorSharp.REDox` provides the shared DOM translation API. REDox packages are Apache-2.0 licensed ([REDox](https://github.com/CAPCOM-TD-OSS/REDox)).
 
 ```bash
+dotnet add package BergamotTranslatorSharp.REDox.Json5
+dotnet add package BergamotTranslatorSharp.REDox.Ini
+dotnet add package BergamotTranslatorSharp.REDox.Cbor
+dotnet add package BergamotTranslatorSharp.REDox.MessagePack
 dotnet add package BergamotTranslatorSharp.REDox
 ```
 
 ```cs
+using BergamotTranslatorSharp.REDox.Json5;
+using BergamotTranslatorSharp.REDox.Ini;
+using BergamotTranslatorSharp.REDox.Cbor;
+using BergamotTranslatorSharp.REDox.MessagePack;
 using BergamotTranslatorSharp.REDox;
 using REDox.Json;
 

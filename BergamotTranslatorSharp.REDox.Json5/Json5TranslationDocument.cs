@@ -1,6 +1,6 @@
 using REDox.Json;
 
-namespace BergamotTranslatorSharp.REDox;
+namespace BergamotTranslatorSharp.REDox.Json5;
 
 /// <summary>A JSON5 document with its nonblank string values selected for translation.</summary>
 public sealed class Json5TranslationDocument : ITranslatableDocument<string>

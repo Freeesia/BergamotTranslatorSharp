@@ -1,6 +1,6 @@
 using REDox.Ini;
 
-namespace BergamotTranslatorSharp.REDox;
+namespace BergamotTranslatorSharp.REDox.Ini;
 
 /// <summary>An INI document with its nonblank string values selected for translation.</summary>
 public sealed class IniTranslationDocument : ITranslatableDocument<string>

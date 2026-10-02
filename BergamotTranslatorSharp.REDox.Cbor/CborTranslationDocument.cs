@@ -1,6 +1,6 @@
 using REDox.Cbor;
 
-namespace BergamotTranslatorSharp.REDox;
+namespace BergamotTranslatorSharp.REDox.Cbor;
 
 /// <summary>A CBOR document with its nonblank string values selected for translation.</summary>
 public sealed class CborTranslationDocument : ITranslatableDocument<byte[]>

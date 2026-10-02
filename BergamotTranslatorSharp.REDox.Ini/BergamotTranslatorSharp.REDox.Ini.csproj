@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>BergamotTranslatorSharp.REDox.Ini</PackageId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CAPCOM.REDox.Ini" />
+    <ProjectReference Include="..\BergamotTranslatorSharp.REDox\BergamotTranslatorSharp.REDox.csproj" />
+  </ItemGroup>
+</Project>

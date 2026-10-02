@@ -19,6 +19,10 @@
     <ProjectReference Include="..\BergamotTranslatorSharp\BergamotTranslatorSharp.csproj" />
     <ProjectReference Include="..\BergamotTranslatorSharp.Json\BergamotTranslatorSharp.Json.csproj" />
     <ProjectReference Include="..\BergamotTranslatorSharp.REDox\BergamotTranslatorSharp.REDox.csproj" />
+    <ProjectReference Include="..\BergamotTranslatorSharp.REDox.Cbor\BergamotTranslatorSharp.REDox.Cbor.csproj" />
+    <ProjectReference Include="..\BergamotTranslatorSharp.REDox.Ini\BergamotTranslatorSharp.REDox.Ini.csproj" />
+    <ProjectReference Include="..\BergamotTranslatorSharp.REDox.Json5\BergamotTranslatorSharp.REDox.Json5.csproj" />
+    <ProjectReference Include="..\BergamotTranslatorSharp.REDox.MessagePack\BergamotTranslatorSharp.REDox.MessagePack.csproj" />
     <ProjectReference Include="..\BergamotTranslatorSharp.Tool\BergamotTranslatorSharp.Tool.csproj" />
     <ProjectReference Include="..\BergamotTranslatorSharp.Toml\BergamotTranslatorSharp.Toml.csproj" />
     <ProjectReference Include="..\BergamotTranslatorSharp.Yaml\BergamotTranslatorSharp.Yaml.csproj" />

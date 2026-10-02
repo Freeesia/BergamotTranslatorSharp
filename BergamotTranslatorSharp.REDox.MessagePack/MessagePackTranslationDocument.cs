@@ -1,6 +1,6 @@
 using REDox.MessagePack;
 
-namespace BergamotTranslatorSharp.REDox;
+namespace BergamotTranslatorSharp.REDox.MessagePack;
 
 /// <summary>A MessagePack document with its nonblank string values selected for translation.</summary>
 public sealed class MessagePackTranslationDocument : ITranslatableDocument<byte[]>
