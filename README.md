@@ -20,7 +20,7 @@ BergamotTranslatorSharp is a C# wrapper for Bergamot Translator. It allows .NET 
 - Fast processing
 - HTML markup preservation
 - Terminology dictionary for prescribed translations
-- Translation of JSON, YAML, and TOML string values
+- Translation of JSON, YAML, TOML, JSON5, INI, CBOR, and MessagePack string values
 - Easy integration with .NET applications
 
 ## Installation
@@ -233,6 +233,36 @@ var toml = service.TranslateToml("title = 'Hello, world!'\ncount = 1\n", diction
 ```
 
 The dictionary is optional. Keys, numbers, booleans, nulls, empty strings, and whitespace-only strings are not translated. Each selected string value is translated separately as plain text. For another data format, implement the core `ITranslatableDocument<T>` interface and call `service.Translate(document, dictionary)`.
+
+For JSON5, INI, CBOR, or MessagePack, install the matching .NET 10 package. Each format package has a dependency on its corresponding REDox parser package; `BergamotTranslatorSharp.REDox` provides the shared DOM translation API. REDox packages are Apache-2.0 licensed ([REDox](https://github.com/CAPCOM-TD-OSS/REDox)).
+
+```bash
+dotnet add package BergamotTranslatorSharp.REDox.Json5
+dotnet add package BergamotTranslatorSharp.REDox.Ini
+dotnet add package BergamotTranslatorSharp.REDox.Cbor
+dotnet add package BergamotTranslatorSharp.REDox.MessagePack
+dotnet add package BergamotTranslatorSharp.REDox
+```
+
+```cs
+using BergamotTranslatorSharp.REDox.Json5;
+using BergamotTranslatorSharp.REDox.Ini;
+using BergamotTranslatorSharp.REDox.Cbor;
+using BergamotTranslatorSharp.REDox.MessagePack;
+using BergamotTranslatorSharp.REDox;
+using REDox.Json;
+
+var json5 = service.TranslateJson5("{ title: 'Hello, world!' }", dictionary);
+var ini = service.TranslateIni("title=Hello, world!", dictionary);
+var translatedCbor = service.TranslateCbor(cborBytes, dictionary);
+var translatedMessagePack = service.TranslateMessagePack(messagePackBytes, dictionary);
+
+using var document = Json5Document.Parse("{ title: 'Hello, world!' }");
+var translatedElement = service.TranslateRedox(document.RootElement, dictionary);
+```
+
+JSON5 comments and trivia are preserved; INI trivia is preserved where REDox exposes it. The REDox document handlers translate nonblank string values, not map keys or non-string values.
+`TranslateRedox` accepts an existing `DElement` and returns a translated clone, leaving the supplied DOM unchanged.
 
 If you pass one configuration file path, `BlockingService` uses that model directly.
 If you pass two configuration file paths, the native service uses them as a pivot translation chain.

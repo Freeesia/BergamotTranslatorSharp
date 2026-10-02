@@ -20,7 +20,7 @@ BergamotTranslatorSharp は Bergamot Translator の C# ラッパーです。オ�
 - 高速な処理
 - HTML マークアップの保持
 - 用語辞書による指定訳の適用
-- JSON・YAML・TOML の文字列値の翻訳
+- JSON・YAML・TOML・JSON5・INI・CBOR・MessagePack の文字列値の翻訳
 - .NET アプリケーションへの組み込み
 
 ## インストール方法
@@ -233,6 +233,36 @@ var toml = service.TranslateToml("title = 'Hello, world!'\ncount = 1\n", diction
 ```
 
 辞書は省略できます。キー、数値、真偽値、null、空文字列、空白だけの文字列は翻訳しません。各文字列値はプレーンテキストとして個別に翻訳します。独自のデータ構造を扱う場合は、本体の `ITranslatableDocument<T>` を実装し、`service.Translate(document, dictionary)` を呼び出せます。
+
+JSON5・INI・CBOR・MessagePack を扱う場合は、対応する .NET 10 専用パッケージを追加してください。各形式のパッケージは対応する REDox パーサーパッケージに依存します。共通の DOM 翻訳 API は `BergamotTranslatorSharp.REDox` が提供します。REDox パッケージは Apache-2.0 ライセンスです（[REDox](https://github.com/CAPCOM-TD-OSS/REDox)）。
+
+```bash
+dotnet add package BergamotTranslatorSharp.REDox.Json5
+dotnet add package BergamotTranslatorSharp.REDox.Ini
+dotnet add package BergamotTranslatorSharp.REDox.Cbor
+dotnet add package BergamotTranslatorSharp.REDox.MessagePack
+dotnet add package BergamotTranslatorSharp.REDox
+```
+
+```cs
+using BergamotTranslatorSharp.REDox.Json5;
+using BergamotTranslatorSharp.REDox.Ini;
+using BergamotTranslatorSharp.REDox.Cbor;
+using BergamotTranslatorSharp.REDox.MessagePack;
+using BergamotTranslatorSharp.REDox;
+using REDox.Json;
+
+var json5 = service.TranslateJson5("{ title: 'Hello, world!' }", dictionary);
+var ini = service.TranslateIni("title=Hello, world!", dictionary);
+var translatedCbor = service.TranslateCbor(cborBytes, dictionary);
+var translatedMessagePack = service.TranslateMessagePack(messagePackBytes, dictionary);
+
+using var document = Json5Document.Parse("{ title: 'Hello, world!' }");
+var translatedElement = service.TranslateRedox(document.RootElement, dictionary);
+```
+
+JSON5 のコメントや trivia を保持し、INI も REDox が扱う trivia を保持します。REDox のドキュメントハンドラーは、空白でない文字列値を翻訳し、map のキーや文字列以外の値は翻訳しません。
+`TranslateRedox` は既存の `DElement` を受け取り、翻訳した複製を返します。渡された DOM は変更しません。
 
 コンフィグファイルパスを 1 個渡した場合、`BlockingService` はそのモデルを直接使用します。
 コンフィグファイルパスを 2 個渡した場合、ネイティブサービスはそれらをピボット翻訳チェーンとして使用します。
