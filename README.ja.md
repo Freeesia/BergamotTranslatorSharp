@@ -293,7 +293,7 @@ dotnet run --project BergamotTranslatorSharp.Tool -- en ja "Hello, world!"
 bergamot en ja --html "<p>Hello, <strong>world</strong>!</p>"
 ```
 
-`--file` で対応する構造化ファイルを翻訳できます。フォーマットは拡張子から判定されますが、`--format` で明示することもできます。対応フォーマットは JSON、JSON5、YAML、TOML、INI、CBOR、MessagePack です。`--output` を指定すると結果をファイルに保存し、未指定の場合は標準出力に出力します。
+`--file` で対応するファイルを翻訳できます。フォーマットは拡張子から判定されますが、`--format` で明示することもできます。対応フォーマットは JSON、JSON5、YAML、TOML、INI、HTML、CBOR、MessagePack です。`--output` を指定すると結果をファイルに保存し、未指定の場合は標準出力に出力します。
 
 ```bash
 bergamot en ja --file input.json

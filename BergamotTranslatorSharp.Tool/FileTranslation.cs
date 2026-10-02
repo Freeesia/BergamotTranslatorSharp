@@ -16,6 +16,7 @@ internal enum TranslationFormat
     Yaml,
     Toml,
     Ini,
+    Html,
     Cbor,
     MessagePack,
 }
@@ -35,6 +36,7 @@ internal static class FileTranslation
                 "yaml" or "yml" => TranslationFormat.Yaml,
                 "toml" => TranslationFormat.Toml,
                 "ini" => TranslationFormat.Ini,
+                "html" or "htm" => TranslationFormat.Html,
                 "cbor" => TranslationFormat.Cbor,
                 "messagepack" or "msgpack" => TranslationFormat.MessagePack,
                 _ => throw new ArgumentException($"Unsupported file format '{format}'.", nameof(format)),
@@ -49,6 +51,7 @@ internal static class FileTranslation
             ".yaml" or ".yml" => TranslationFormat.Yaml,
             ".toml" => TranslationFormat.Toml,
             ".ini" => TranslationFormat.Ini,
+            ".html" or ".htm" => TranslationFormat.Html,
             ".cbor" => TranslationFormat.Cbor,
             ".msgpack" or ".mpk" => TranslationFormat.MessagePack,
             _ => throw new ArgumentException(
@@ -78,6 +81,11 @@ internal static class FileTranslation
         }
 
         var text = File.ReadAllText(path);
+        if (format == TranslationFormat.Html)
+            return Encoding.UTF8.GetBytes(dictionary is null
+                ? service.Translate(text, html: true)
+                : service.Translate(text, dictionary));
+
         var translatedText = format switch
         {
             TranslationFormat.Json => service.TranslateJson(text, dictionary),

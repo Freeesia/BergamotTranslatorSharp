@@ -293,7 +293,7 @@ The arguments are source language, target language, and text. The tool prefers a
 bergamot en ja --html "<p>Hello, <strong>world</strong>!</p>"
 ```
 
-Translate a supported structured document with `--file`. The format is selected from the file extension, or can be specified explicitly with `--format`. Supported formats are JSON, JSON5, YAML, TOML, INI, CBOR, and MessagePack. Use `--output` to write the result to a file; otherwise it is written to standard output.
+Translate a supported document with `--file`. The format is selected from the file extension, or can be specified explicitly with `--format`. Supported formats are JSON, JSON5, YAML, TOML, INI, HTML, CBOR, and MessagePack. Use `--output` to write the result to a file; otherwise it is written to standard output.
 
 ```bash
 bergamot en ja --file input.json

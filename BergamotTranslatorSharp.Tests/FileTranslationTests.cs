@@ -12,6 +12,8 @@ public sealed class FileTranslationTests
     [InlineData("input.yml", null, "Yaml")]
     [InlineData("input.toml", null, "Toml")]
     [InlineData("input.ini", null, "Ini")]
+    [InlineData("input.html", null, "Html")]
+    [InlineData("input.htm", null, "Html")]
     [InlineData("input.cbor", null, "Cbor")]
     [InlineData("input.msgpack", null, "MessagePack")]
     [InlineData("input.mpk", null, "MessagePack")]
@@ -23,6 +25,7 @@ public sealed class FileTranslationTests
     [Theory]
     [InlineData("anything.bin", "json", "Json")]
     [InlineData("anything.conf", "yml", "Yaml")]
+    [InlineData("anything.dat", "htm", "Html")]
     [InlineData("anything.dat", "msgpack", "MessagePack")]
     public void ResolveFormat_ExplicitFormatOverridesExtension(string path, string format, string expected)
     {
@@ -36,7 +39,6 @@ public sealed class FileTranslationTests
     [InlineData("input.cfg", null)]
     [InlineData("input.csv", null)]
     [InlineData("input.xml", null)]
-    [InlineData("input.html", null)]
     [InlineData("input.json", "xml")]
     public void ResolveFormat_RejectsUnknownOrAmbiguousFormats(string path, string? format)
     {
