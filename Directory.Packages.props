@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="CAPCOM.REDox" Version="1.0.0" />
+    <PackageVersion Include="CAPCOM.REDox" Version="1.0.1" />
     <PackageVersion Include="CAPCOM.REDox.Cbor" Version="1.0.1" />
     <PackageVersion Include="CAPCOM.REDox.Ini" Version="1.0.0" />
     <PackageVersion Include="CAPCOM.REDox.MessagePack" Version="1.0.1" />
